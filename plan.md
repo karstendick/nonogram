@@ -1,6 +1,7 @@
 # Nonogram Webapp - Development Plan
 
 ## Project Overview
+
 A web-based nonogram puzzle game built with TypeScript. Nonograms are picture logic puzzles where players fill in cells on a grid based on number clues to reveal a hidden picture.
 
 ## Terminology
@@ -29,6 +30,7 @@ To maintain clarity throughout the project, we'll use these consistent terms:
 - **Mode**: (Mobile only) The current interaction mode - either "Fill" or "Mark Empty". Determines what happens when the user taps a cell. Selected via toggle buttons.
 
 ## Technology Stack
+
 - **Language**: TypeScript
 - **Frontend Framework**: React
 - **Build Tool**: Vite
@@ -46,6 +48,7 @@ To maintain clarity throughout the project, we'll use these consistent terms:
 ## Core Features
 
 ### V1: Basic Gameplay
+
 - [ ] Grid rendering system
   - Variable grid sizes (5x5, 10x10, 15x15)
   - Cell states: empty, filled, marked-as-empty (X)
@@ -71,6 +74,7 @@ To maintain clarity throughout the project, we'll use these consistent terms:
   - Show errors (optional)
 
 ### V1: Game Management
+
 - [ ] Puzzle data structure
   - JSON format for puzzle storage
   - Include metadata (title, difficulty, size)
@@ -82,6 +86,7 @@ To maintain clarity throughout the project, we'll use these consistent terms:
   - Reset puzzle
 
 ### V1: Puzzle Generation & Solver Assistance
+
 - [ ] Puzzle generator (algorithm-based)
   - Generate valid nonogram puzzles of various sizes
   - Ensure puzzles have unique solutions
@@ -94,6 +99,7 @@ To maintain clarity throughout the project, we'll use these consistent terms:
   - Show possible moves
 
 ### V2: Enhanced Features
+
 - [ ] Auto-save progress to localStorage
   - Seamless background persistence on every move
   - Automatically load saved state on app launch
@@ -109,6 +115,7 @@ To maintain clarity throughout the project, we'll use these consistent terms:
 - [ ] Share puzzle solutions (export as image)
 
 ### V3: Large Puzzle Support
+
 - [ ] Support for larger grid sizes (20x20, 25x25)
 - [ ] Pan and zoom gestures for large puzzles
   - Pinch to zoom in/out
@@ -121,6 +128,7 @@ To maintain clarity throughout the project, we'll use these consistent terms:
 ### Puzzle Format
 
 **JSON Storage Format** (Human-Readable):
+
 ```json
 {
   "puzzles": [
@@ -128,36 +136,25 @@ To maintain clarity throughout the project, we'll use these consistent terms:
       "id": "heart",
       "title": "Heart",
       "difficulty": "easy",
-      "solution": [
-        ".##.##.",
-        "#######",
-        "#######",
-        ".#####.",
-        "..###..",
-        "...#..."
-      ]
+      "solution": [".##.##.", "#######", "#######", ".#####.", "..###..", "...#..."]
     },
     {
       "id": "house",
       "title": "House",
       "difficulty": "easy",
-      "solution": [
-        "..#..",
-        ".###.",
-        "#####",
-        "#...#",
-        "#...#"
-      ]
+      "solution": ["..#..", ".###.", "#####", "#...#", "#...#"]
     }
   ]
 }
 ```
 
 **Character Convention:**
+
 - `#` = Filled cell (part of the picture)
 - `.` = Empty cell (background)
 
 **Benefits of this format:**
+
 - ✅ Human-readable - you can see the picture!
 - ✅ Easy to create and edit
 - ✅ Git-friendly - clear diffs when puzzles change
@@ -165,6 +162,7 @@ To maintain clarity throughout the project, we'll use these consistent terms:
 - ✅ Clues generated programmatically from solution
 
 **TypeScript Interfaces:**
+
 ```typescript
 // Raw puzzle data from JSON
 interface PuzzleData {
@@ -188,14 +186,13 @@ interface Puzzle {
 
 // Parsing function
 function parsePuzzle(data: PuzzleData): Puzzle {
-  const solution = data.solution.map(row =>
-    row.split('').map(char => char === '#')
-  );
+  const solution = data.solution.map((row) => row.split('').map((char) => char === '#'));
   // ... generate clues from solution
 }
 ```
 
 ### Game State
+
 ```typescript
 interface GameState {
   puzzleId: string;
@@ -208,16 +205,17 @@ interface GameState {
 enum CellState {
   Empty = 0,
   Filled = 1,
-  MarkedEmpty = 2
+  MarkedEmpty = 2,
 }
 
 enum InteractionMode {
   Fill = 'fill',
-  MarkEmpty = 'mark_empty'
+  MarkEmpty = 'mark_empty',
 }
 ```
 
 ## Project Structure
+
 ```
 nonogram/
 ├── src/
@@ -274,6 +272,7 @@ nonogram/
 ### Linting & Formatting Setup
 
 **ESLint Configuration:**
+
 - TypeScript ESLint parser and rules
 - React and React Hooks plugins
 - Import sorting and organization
@@ -281,6 +280,7 @@ nonogram/
 - Strict mode enabled
 
 **Prettier Configuration:**
+
 - Semi-colons: true
 - Single quotes: true
 - Tab width: 2
@@ -289,19 +289,16 @@ nonogram/
 - Integrates with ESLint (no conflicts)
 
 **Pre-commit Hooks (Husky + lint-staged):**
+
 ```json
 {
-  "*.{ts,tsx}": [
-    "eslint --fix",
-    "prettier --write"
-  ],
-  "*.{json,css,md}": [
-    "prettier --write"
-  ]
+  "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+  "*.{json,css,md}": ["prettier --write"]
 }
 ```
 
 **Pre-commit Hook Script (.husky/pre-commit):**
+
 ```bash
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
@@ -320,6 +317,7 @@ npm run build
 ```
 
 **Benefits:**
+
 - ✅ **Lint + Format** - Runs on staged files only (fast)
 - ✅ **Type Check** - Catches type errors early (~2-5 seconds)
 - ✅ **Tests** - Ensures nothing breaks before commit (~5-30 seconds)
@@ -332,6 +330,7 @@ npm run build
 
 **GitHub Actions - CI Workflow (.github/workflows/ci.yml):**
 Runs on every push and pull request:
+
 1. **Lint** - ESLint with error reporting
 2. **Format Check** - Prettier verification
 3. **Type Check** - TypeScript compiler (tsc --noEmit)
@@ -340,11 +339,13 @@ Runs on every push and pull request:
 
 **GitHub Actions - Deploy Workflow (.github/workflows/deploy.yml):**
 Runs on push to main (after CI passes):
+
 1. Run CI checks
 2. Build production bundle
 3. Deploy to GitHub Pages
 
 **npm Scripts:**
+
 ```json
 {
   "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -360,30 +361,33 @@ Runs on push to main (after CI passes):
 
 ## Implementation Phases
 
-### Phase 1: Project Setup
-1. Initialize Vite + React + TypeScript project
-2. Install dependencies (Tailwind, Zustand, Vite PWA plugin)
-3. Set up Tailwind CSS
-4. Configure linting and formatting:
-   - Install ESLint with TypeScript + React plugins
-   - Configure ESLint flat config (eslint.config.js)
-   - Install Prettier and create .prettierrc
-   - Install Husky for git hooks
-   - Install lint-staged for pre-commit checks
-   - Configure pre-commit hook to run ESLint + Prettier
-5. Set up GitHub Actions:
-   - CI workflow (lint, typecheck, test)
-   - Deploy workflow (build and deploy to GitHub Pages)
-6. Create basic project structure
-7. Define TypeScript interfaces and types
+### Phase 1: Project Setup ✅
 
-### Phase 2: Core Game Logic
-1. Implement clue generation from solution
-2. Implement validation logic
-3. Create puzzle data format
-4. Add 5-10 sample puzzles of varying difficulty
+1. ✅ Initialize Vite + React + TypeScript project
+2. ✅ Install dependencies (Tailwind, Zustand, Vite PWA plugin)
+3. ✅ Set up Tailwind CSS
+4. ✅ Configure linting and formatting:
+   - ✅ Install ESLint with TypeScript + React plugins
+   - ✅ Configure ESLint flat config (eslint.config.js)
+   - ✅ Install Prettier and create .prettierrc
+   - ✅ Install Husky for git hooks
+   - ✅ Install lint-staged for pre-commit checks
+   - ✅ Configure pre-commit hook to run ESLint + Prettier + type-check + tests + build
+5. ✅ Set up GitHub Actions:
+   - ✅ CI workflow (lint, typecheck, test)
+   - ✅ Deploy workflow (build and deploy to GitHub Pages)
+6. ✅ Create basic project structure
+7. ✅ Define TypeScript interfaces and types
+
+### Phase 2: Core Game Logic ✅
+
+1. ✅ Implement clue generation from solution
+2. ✅ Implement validation logic
+3. ✅ Create puzzle data format
+4. ✅ Add 10 sample puzzles of varying difficulty (5 easy, 3 medium, 2 hard)
 
 ### Phase 3: Puzzle Generation & Solver Assistance
+
 1. Implement puzzle generator algorithm
    - Generate valid nonogram patterns
    - Ensure unique solutions
@@ -397,6 +401,7 @@ Runs on push to main (after CI passes):
    - Show possible moves feature
 
 ### Phase 4: UI Components (Mobile-First)
+
 1. Build responsive Grid component
 2. Build Cell component with touch/mouse interaction
    - Desktop: left-click to fill, right-click to mark empty
@@ -411,20 +416,24 @@ Runs on push to main (after CI passes):
 7. Style with Tailwind (mobile-first breakpoints)
 
 ### Phase 5: State Management
+
 1. Set up Zustand store for game state
 2. Implement undo/redo functionality
 
 ### Phase 6: PWA & Polish
-1. Configure PWA manifest and icons
-2. Set up service worker for offline support
-3. Add install prompt
-4. Write unit tests for game logic
-5. Write component tests
-6. Add animations and transitions
-7. Performance optimization
-8. Deploy to GitHub Pages
+
+1. Design and create custom app icons (favicon, PWA icons)
+2. Configure PWA manifest with custom icons
+3. Set up service worker for offline support
+4. Add install prompt
+5. Write unit tests for game logic
+6. Write component tests
+7. Add animations and transitions
+8. Performance optimization
+9. Deploy to GitHub Pages
 
 ### Phase 7: Enhanced Features (V2)
+
 1. Auto-save progress to localStorage
 2. Highlight active array on hover
 3. Multiple color support (colored nonograms)
@@ -433,6 +442,7 @@ Runs on push to main (after CI passes):
 6. Dark mode support
 
 ### Phase 8: Large Puzzle Support (V3)
+
 1. Implement 20x20 and 25x25 grid sizes
 2. Add pinch-to-zoom gesture support
 3. Add two-finger pan gesture support
@@ -442,6 +452,7 @@ Runs on push to main (after CI passes):
 ## Deployment Strategy
 
 ### GitHub Pages Setup
+
 1. Build static files with `npm run build` → `dist/` folder
 2. Configure Vite base path for GitHub Pages (`/nonogram/`)
 3. GitHub Actions workflow triggers on push to `main`
@@ -451,6 +462,7 @@ Runs on push to main (after CI passes):
 ### GitHub Actions Workflows
 
 **CI Workflow (.github/workflows/ci.yml):**
+
 ```yaml
 name: CI
 on: [push, pull_request]
@@ -469,6 +481,7 @@ jobs:
 ```
 
 **Deploy Workflow (.github/workflows/deploy.yml):**
+
 ```yaml
 name: Deploy
 on:
@@ -487,6 +500,7 @@ jobs:
 ```
 
 ## Success Criteria (V1)
+
 - Playable nonogram puzzles (5x5, 10x10, 15x15 grid sizes)
 - Smooth mobile experience with touch gestures
 - Installable as PWA (add to home screen)
@@ -505,17 +519,20 @@ jobs:
   - Test coverage for core logic
 
 ## V2 Goals
+
 - Persistent game state across sessions (auto-save to localStorage)
 - Statistics tracking (completion time, move count)
 - Multiple color support for colored nonograms
 - Dark mode support
 
 ## V3 Goals
+
 - Large puzzle support (20x20, 25x25 grid sizes)
 - Pan and zoom gestures for navigating large puzzles
 - Optimized rendering for large grids
 
 ## Next Steps
+
 1. Initialize Vite + React + TypeScript project
 2. Install and configure Tailwind CSS
 3. Set up ESLint + Prettier + Husky + lint-staged
