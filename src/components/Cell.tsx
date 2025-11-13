@@ -18,11 +18,6 @@ export function Cell({ state, row, col, onCellClick }: CellProps) {
     onCellClick(row, col, true);
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault();
-    onCellClick(row, col, false);
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -52,7 +47,6 @@ export function Cell({ state, row, col, onCellClick }: CellProps) {
       className={getCellClasses()}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
-      onTouchStart={handleTouchStart}
       onKeyDown={handleKeyDown}
       aria-label={`Cell ${row + 1}, ${col + 1}`}
     >
