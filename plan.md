@@ -60,14 +60,9 @@ To maintain clarity throughout the project, we'll use these consistent terms:
   - **Desktop:**
     - Left click to fill cell
     - Right click to mark cell as empty
-    - Drag (mouse down + move) to fill/mark multiple cells within a single array
   - **Mobile:**
     - Two toggle buttons: "Fill" mode and "Mark Empty" mode
     - Tap cell to apply current mode (fill or mark empty)
-    - Drag (touch + move) to apply current mode to multiple cells within a single array
-  - **Common behavior:**
-    - Dragging is constrained to the array (row or column) where the drag started
-    - Cannot drag diagonally or switch between rows/columns mid-drag
 - [ ] Validation logic
   - Check if solution is correct
   - Check if individual arrays are complete
@@ -386,7 +381,23 @@ Runs on push to main (after CI passes):
 3. ✅ Create puzzle data format
 4. ✅ Add 10 sample puzzles of varying difficulty (5 easy, 3 medium, 2 hard)
 
-### Phase 3: Puzzle Generation & Solver Assistance
+### Phase 3: UI Components (Mobile-First) ✅
+
+1. ✅ Build responsive Grid component
+2. ✅ Build Cell component with touch/mouse interaction
+   - Desktop: left-click to fill, right-click to mark empty
+   - Mobile: tap applies current mode
+3. ✅ Build Clues component with mobile layout (integrated in GameBoard)
+4. ✅ Build ModeToggle component (mobile: Fill/Mark Empty buttons)
+5. ✅ Build Controls (reset, undo, check)
+6. ✅ Style with Tailwind (mobile-first breakpoints)
+
+### Phase 4: State Management ✅
+
+1. ✅ Set up Zustand store for game state
+2. ✅ Implement undo/redo functionality
+
+### Phase 5: Puzzle Generation & Solver Assistance
 
 1. Implement puzzle generator algorithm
    - Generate valid nonogram patterns
@@ -399,26 +410,6 @@ Runs on push to main (after CI passes):
    - Logic to identify next solvable cell
    - Error checking functionality
    - Show possible moves feature
-
-### Phase 4: UI Components (Mobile-First)
-
-1. Build responsive Grid component
-2. Build Cell component with touch/mouse interaction
-   - Desktop: left-click to fill, right-click to mark empty
-   - Mobile: tap applies current mode
-3. Build Clues component with mobile layout
-4. Build ModeToggle component (mobile: Fill/Mark Empty buttons)
-5. Build Controls (reset, undo, check)
-6. Implement drag interaction
-   - Constrained to single array (row or column)
-   - Desktop: drag follows mouse button (left = fill, right = mark)
-   - Mobile: drag applies current mode
-7. Style with Tailwind (mobile-first breakpoints)
-
-### Phase 5: State Management
-
-1. Set up Zustand store for game state
-2. Implement undo/redo functionality
 
 ### Phase 6: PWA & Polish
 
@@ -440,6 +431,10 @@ Runs on push to main (after CI passes):
 4. Statistics tracking (completion time, moves)
 5. Haptic feedback (mobile)
 6. Dark mode support
+7. Drag interaction (fill/mark multiple cells in one stroke)
+   - Constrained to single array (row or column)
+   - Desktop: drag follows mouse button (left = fill, right = mark)
+   - Mobile: drag applies current mode
 
 ### Phase 8: Large Puzzle Support (V3)
 
