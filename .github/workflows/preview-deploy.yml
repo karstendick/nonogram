@@ -4,14 +4,14 @@ on:
   workflow_run:
     workflows: [CI]
     types: [completed]
-    branches-ignore:
-      - main
-      - gh-pages
 
 jobs:
   deploy-preview:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch != 'main' &&
+      github.event.workflow_run.head_branch != 'gh-pages'
 
     permissions:
       contents: write
@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -33,7 +35,7 @@ jobs:
         id: branch
         run: |
           # Convert branch name to URL-safe format (replace / with -)
-          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
           SAFE_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/\//-/g')
           echo "name=$SAFE_BRANCH_NAME" >> $GITHUB_OUTPUT
           echo "Preview will be deployed to: https://karstendick.github.io/nonogram/preview/$SAFE_BRANCH_NAME/"
