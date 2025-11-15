@@ -1,0 +1,115 @@
+name: Deploy Preview
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches-ignore:
+      - main
+      - gh-pages
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract branch name
+        id: branch
+        run: |
+          # Convert branch name to URL-safe format (replace / with -)
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          SAFE_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/\//-/g')
+          echo "name=$SAFE_BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "Preview will be deployed to: https://karstendick.github.io/nonogram/preview/$SAFE_BRANCH_NAME/"
+
+      - name: Build project
+        run: npm run build
+        env:
+          VITE_BASE_PATH: /nonogram/preview/${{ steps.branch.outputs.name }}/
+
+      - name: Deploy to GitHub Pages (preview)
+        run: |
+          # Configure git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Clone gh-pages branch
+          git clone --branch gh-pages https://github.com/${{ github.repository }}.git gh-pages-clone || git clone https://github.com/${{ github.repository }}.git gh-pages-clone
+
+          cd gh-pages-clone
+
+          # Create gh-pages branch if it doesn't exist
+          git checkout gh-pages 2>/dev/null || git checkout --orphan gh-pages
+
+          # Create preview directory
+          mkdir -p preview/${{ steps.branch.outputs.name }}
+
+          # Remove old preview files for this branch
+          rm -rf preview/${{ steps.branch.outputs.name }}/*
+
+          # Copy new build
+          cp -r ../dist/* preview/${{ steps.branch.outputs.name }}/
+
+          # Create/update index file for previews
+          cat > preview/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Nonogram Previews</title>
+            <style>
+              body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+              h1 { color: #333; }
+              ul { list-style: none; padding: 0; }
+              li { padding: 10px; border-bottom: 1px solid #eee; }
+              a { color: #0366d6; text-decoration: none; }
+              a:hover { text-decoration: underline; }
+            </style>
+          </head>
+          <body>
+            <h1>Nonogram Preview Deployments</h1>
+            <p>Available preview branches:</p>
+            <ul id="previews"></ul>
+            <script>
+              // List all preview directories
+              fetch('https://api.github.com/repos/${{ github.repository }}/contents/preview?ref=gh-pages')
+                .then(r => r.json())
+                .then(items => {
+                  const list = document.getElementById('previews');
+                  items.filter(i => i.type === 'dir' && i.name !== 'index.html').forEach(item => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = './' + item.name + '/';
+                    a.textContent = item.name;
+                    li.appendChild(a);
+                    list.appendChild(li);
+                  });
+                });
+            </script>
+          </body>
+          </html>
+          EOF
+
+          # Commit and push
+          git add .
+          git commit -m "Deploy preview for ${{ steps.branch.outputs.name }} @ ${{ github.sha }}" || echo "No changes to commit"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages
+
+      - name: Comment preview URL
+        run: |
+          echo "::notice::Preview deployed to https://karstendick.github.io/nonogram/preview/${{ steps.branch.outputs.name }}/"

@@ -2,9 +2,13 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// Get base path from environment or use default
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+const basePath = (process.env['VITE_BASE_PATH'] as string | undefined) || '/nonogram/';
+
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/nonogram/',
+  base: basePath,
   plugins: [
     react(),
     VitePWA({

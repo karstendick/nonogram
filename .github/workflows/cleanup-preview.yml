@@ -1,0 +1,47 @@
+name: Cleanup Preview
+
+on:
+  delete:
+    branches:
+      - '**'
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    if: github.event.ref_type == 'branch'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Extract branch name
+        id: branch
+        run: |
+          # Convert branch name to URL-safe format (same as deploy)
+          SAFE_BRANCH_NAME=$(echo "${{ github.event.ref }}" | sed 's/\//-/g')
+          echo "name=$SAFE_BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Remove preview
+        run: |
+          if [ -d "preview/${{ steps.branch.outputs.name }}" ]; then
+            # Configure git
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+            # Remove preview directory
+            rm -rf "preview/${{ steps.branch.outputs.name }}"
+
+            # Commit and push
+            git add .
+            git commit -m "Remove preview for deleted branch ${{ steps.branch.outputs.name }}"
+            git push
+
+            echo "::notice::Removed preview for branch ${{ steps.branch.outputs.name }}"
+          else
+            echo "::notice::No preview found for branch ${{ steps.branch.outputs.name }}"
+          fi

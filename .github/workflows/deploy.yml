@@ -12,9 +12,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     permissions:
-      contents: read
-      pages: write
-      id-token: write
+      contents: write
 
     steps:
       - name: Checkout code
@@ -31,15 +29,43 @@ jobs:
 
       - name: Build project
         run: npm run build
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './dist'
+        env:
+          VITE_BASE_PATH: /nonogram/
 
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        run: |
+          # Configure git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Clone gh-pages branch
+          git clone --branch gh-pages https://github.com/${{ github.repository }}.git gh-pages-clone || git clone https://github.com/${{ github.repository }}.git gh-pages-clone
+
+          cd gh-pages-clone
+
+          # Create gh-pages branch if it doesn't exist
+          git checkout gh-pages 2>/dev/null || git checkout --orphan gh-pages
+
+          # Preserve preview directory
+          if [ -d "preview" ]; then
+            mv preview ../preview-backup
+          fi
+
+          # Remove all files except preview
+          find . -mindepth 1 -maxdepth 1 ! -name 'preview' ! -name '.git' -exec rm -rf {} +
+
+          # Copy new build to root
+          cp -r ../dist/* .
+
+          # Restore preview directory
+          if [ -d "../preview-backup" ]; then
+            mv ../preview-backup preview
+          fi
+
+          # Commit and push
+          git add .
+          git commit -m "Deploy main @ ${{ github.sha }}" || echo "No changes to commit"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages
+
+      - name: Deployment complete
+        run: echo "::notice::Deployed to https://karstendick.github.io/nonogram/"
