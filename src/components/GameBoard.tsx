@@ -72,7 +72,7 @@ export function GameBoard() {
               {clues.map((clue, idx) => (
                 <div
                   key={idx}
-                  className={`text-xs sm:text-sm font-semibold ${
+                  className={`text-xs sm:text-sm font-semibold text-center ${
                     isColComplete(colIndex) ? 'text-gray-400 line-through' : 'text-gray-700'
                   }`}
                 >
@@ -91,7 +91,7 @@ export function GameBoard() {
           {rowClues.map((clues, rowIndex) => (
             <div
               key={rowIndex}
-              className="h-8 sm:h-10 flex items-center justify-end gap-1 pr-2"
+              className="h-8 sm:h-10 flex items-center justify-end gap-1 pr-1 sm:pr-2"
               style={{
                 minWidth: `${maxRowClues * 2.5}rem`,
               }}
@@ -99,7 +99,7 @@ export function GameBoard() {
               {clues.map((clue, idx) => (
                 <div
                   key={idx}
-                  className={`text-xs sm:text-sm font-semibold ${
+                  className={`text-xs sm:text-sm font-semibold text-center ${
                     isRowComplete(rowIndex) ? 'text-gray-400 line-through' : 'text-gray-700'
                   }`}
                 >
