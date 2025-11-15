@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Nonogram Previews</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+    h1 { color: #333; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 10px; border-bottom: 1px solid #eee; }
+    a { color: #0366d6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Nonogram Preview Deployments</h1>
+  <p>Available preview branches:</p>
+  <ul id="previews"></ul>
+  <script>
+    // List all preview directories
+    fetch('https://api.github.com/repos/karstendick/nonogram/contents/preview?ref=gh-pages')
+      .then(r => r.json())
+      .then(items => {
+        const list = document.getElementById('previews');
+        items.filter(i => i.type === 'dir' && i.name !== 'index.html').forEach(item => {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = './' + item.name + '/';
+          a.textContent = item.name;
+          li.appendChild(a);
+          list.appendChild(li);
+        });
+      });
+  </script>
+</body>
+</html>
