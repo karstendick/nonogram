@@ -54,7 +54,8 @@ jobs:
           # Remove all files except preview
           find . -mindepth 1 -maxdepth 1 ! -name 'preview' ! -name '.git' -exec rm -rf {} +
 
-          # Copy new build to root
+          # Copy new build to root (including dotfiles)
+          shopt -s dotglob
           cp -r ../dist/* .
 
           # Restore preview directory

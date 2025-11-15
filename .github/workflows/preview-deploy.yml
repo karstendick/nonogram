@@ -65,7 +65,8 @@ jobs:
           # Remove old preview files for this branch
           rm -rf preview/${{ steps.branch.outputs.name }}/*
 
-          # Copy new build
+          # Copy new build (including dotfiles)
+          shopt -s dotglob
           cp -r ../dist/* preview/${{ steps.branch.outputs.name }}/
 
           # Create/update index file for previews
