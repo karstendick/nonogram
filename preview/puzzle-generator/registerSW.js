@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/nonogram/preview/puzzle-generator/sw.js', { scope: '/nonogram/preview/puzzle-generator/' })})}
