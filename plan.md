@@ -80,7 +80,7 @@ To maintain clarity throughout the project, we'll use these consistent terms:
   - Undo/redo functionality
   - Reset puzzle
 
-### V1: Puzzle Generation & Solver Assistance
+### V1: Puzzle Generation
 
 - [ ] Puzzle generator (algorithm-based)
   - Generate valid nonogram puzzles of various sizes
@@ -88,13 +88,13 @@ To maintain clarity throughout the project, we'll use these consistent terms:
 - [ ] Difficulty ratings
   - Algorithm to assess puzzle difficulty
   - Categorize generated puzzles by difficulty level
+
+### V2: Enhanced Features
+
 - [ ] Hint system (solver assistance features)
   - Reveal next logical cell
   - Check for errors
   - Show possible moves
-
-### V2: Enhanced Features
-
 - [ ] Auto-save progress to localStorage
   - Seamless background persistence on every move
   - Automatically load saved state on app launch
@@ -397,19 +397,304 @@ Runs on push to main (after CI passes):
 1. ✅ Set up Zustand store for game state
 2. ✅ Implement undo/redo functionality
 
-### Phase 5: Puzzle Generation & Solver Assistance
+### Phase 5: Puzzle Generation
 
-1. Implement puzzle generator algorithm
-   - Generate valid nonogram patterns
-   - Ensure unique solutions
-   - Support multiple grid sizes
-2. Implement difficulty rating algorithm
-   - Analyze solving techniques required
-   - Categorize puzzles (easy, medium, hard)
-3. Build hint system
-   - Logic to identify next solvable cell
-   - Error checking functionality
-   - Show possible moves feature
+#### Design Overview
+
+We'll use a **generate-and-verify** approach inspired by Simon Tatham's puzzle collection:
+
+1. Generate random grid patterns using cellular automaton smoothing
+2. Calculate clues from the pattern
+3. Verify uniqueness using a constraint solver
+4. Accept or reject the puzzle based on solver results
+5. Repeat until a valid, unique puzzle is generated
+
+This approach is simple, practical, and works well for grid sizes up to ~30×30.
+
+#### 1. Constraint Solver Implementation
+
+**Approach:** Write our own solver (no external libraries)
+
+- Nonogram-specific solvers don't exist in TypeScript ecosystem
+- Generic constraint libraries would be overkill and increase bundle size
+- Custom implementation gives us control for difficulty rating
+- ~200-400 lines of focused code
+
+**Algorithm: Array-by-array constraint propagation**
+
+Core function: `solveArray(clues: number[], knownCells: CellState[]): CellState[]`
+
+- Input: Clues for one array (row or column) and current known cell states
+- Process: Find all valid placements of blocks that satisfy the clues
+- Output: Updated cell states (cells that are the same in ALL valid placements are definite)
+
+Full solver iterates:
+
+1. Apply `solveArray()` to each row and column
+2. Repeat until no more progress is made
+3. If puzzle is complete → success (solvable with pure logic - ACCEPT)
+4. If stuck but incomplete → requires guessing (REJECT during generation)
+
+**Uniqueness verification (only during puzzle generation):**
+
+- If logical deduction completes the puzzle → ACCEPT (solvable with pure logic, unique solution)
+- If stuck and incomplete → REJECT (would require guessing)
+- Use backtracking only to verify no multiple solutions exist (then REJECT if found)
+
+**Important:** Players will never encounter puzzles requiring guessing. The solver's backtracking is only used during generation to identify and reject such puzzles.
+
+**Solver output:**
+
+```typescript
+interface SolverResult {
+  solved: boolean; // Puzzle was completed
+  unique: boolean; // Has exactly one solution
+  difficulty: Difficulty; // Based on techniques required
+  techniques: SolvingTechnique[]; // Which techniques were needed
+}
+```
+
+**Known limitation (acceptable):**
+Like Simon Tatham's implementation, our array-by-array solver cannot solve puzzles requiring multi-array deduction without backtracking. This is acceptable because:
+
+- Such puzzles are rare
+- They'll be rejected during generation
+- Players expect nonograms to be solvable with array-by-array logic
+
+#### 2. Pattern Generation Algorithm
+
+**Approach: Random grid with cellular automaton smoothing**
+
+**Seeded Random Number Generator:**
+Use the `seedrandom` library for reproducible puzzle generation.
+
+```bash
+npm install seedrandom
+npm install --save-dev @types/seedrandom
+```
+
+```typescript
+import seedrandom from 'seedrandom';
+
+// Create seeded RNG
+const rng = seedrandom('puzzle-seed-12345');
+
+// Use like Math.random()
+const value = rng(); // Returns deterministic value based on seed
+```
+
+**Benefits:**
+
+- Reproducible puzzles (same seed = same puzzle)
+- Can generate "daily puzzle" feature (use date as seed)
+- Easier debugging (can recreate specific puzzles)
+- Can share puzzle seeds with other players
+
+Step 1: Generate random values
+
+```typescript
+// Create grid with random floats [0.0, 1.0]
+// Use seeded RNG instead of Math.random()
+const rng = seedrandom(seed);
+const grid = Array(size)
+  .fill(0)
+  .map(() =>
+    Array(size)
+      .fill(0)
+      .map(() => rng())
+  );
+```
+
+Step 2: Cellular automaton smoothing
+
+```typescript
+// Average each cell with its neighbors (creates connected regions)
+const smoothed = grid.map((row, r) =>
+  row.map((_, c) => {
+    const neighbors = getNeighbors(grid, r, c);
+    return average(neighbors);
+  })
+);
+```
+
+Step 3: Threshold at median
+
+```typescript
+// Convert to binary (filled/empty) - targets ~50% fill rate
+const median = calculateMedian(smoothed);
+const binary = smoothed.map((row) => row.map((val) => val >= median));
+```
+
+**Benefits:**
+
+- Creates more interesting patterns than pure random
+- Connected regions look better (recognizable shapes)
+- ~50% fill rate produces good puzzles
+- Fast generation (rejection sampling is cheap)
+
+#### 3. Puzzle Generation Pipeline
+
+```typescript
+function generatePuzzle(size: number, seed: string): Puzzle | null {
+  const maxAttempts = 100; // Prevent infinite loops
+
+  for (let i = 0; i < maxAttempts; i++) {
+    // Use seed + attempt number for deterministic generation
+    const attemptSeed = `${seed}-${i}`;
+
+    // 1. Generate random pattern with seeded RNG
+    const pattern = generateRandomPattern(size, attemptSeed);
+
+    // 2. Calculate clues
+    const rowClues = calculateRowClues(pattern);
+    const columnClues = calculateColumnClues(pattern);
+
+    // 3. Verify no row/column is entirely uniform (degenerate case)
+    if (hasUniformRow(rowClues) || hasUniformColumn(columnClues)) {
+      continue;
+    }
+
+    // 4. Attempt to solve
+    const result = solvePuzzle({ pattern, rowClues, columnClues });
+
+    // 5. Accept only if solvable with pure logic and has unique solution
+    if (result.solved && result.unique) {
+      return {
+        id: seed, // Store seed for reproducibility
+        pattern,
+        rowClues,
+        columnClues,
+        difficulty: result.difficulty,
+        techniques: result.techniques,
+      };
+    }
+
+    // If not solved → requires guessing (reject)
+    // If not unique → multiple solutions (reject)
+  }
+
+  return null; // Failed to generate after max attempts
+}
+
+// Example usage:
+// Daily puzzle: generatePuzzle(10, '2025-01-17')
+// Random puzzle: generatePuzzle(10, crypto.randomUUID())
+// Shared puzzle: generatePuzzle(10, 'puzzle-abc123')
+```
+
+#### 4. Difficulty Rating Algorithm
+
+Rate puzzles based on solving techniques required:
+
+**Easy:**
+
+- Only simple array solving (single-pass deduction)
+- Complete blocks (clue equals array size)
+- Edge fitting (blocks must touch edges)
+- No backtracking needed
+
+**Medium:**
+
+- Multiple passes of array solving required
+- Overlap detection (all valid placements share common cells)
+- Cross-referencing between rows and columns
+- No backtracking needed
+
+**Hard:**
+
+- Advanced array solving techniques
+- Requires many iteration passes (>10)
+- Complex overlap detection patterns
+- Solvable with logic alone (no guessing)
+
+**Rejected during generation:**
+
+- Requires guessing/trial-and-error (incomplete after logical deduction)
+- Multiple solutions (invalid)
+- Not solvable with array-by-array logic alone
+
+```typescript
+function rateDifficulty(result: SolverResult): Difficulty {
+  // Reject puzzles that aren't solvable with pure logic
+  if (!result.solved) return 'rejected'; // Incomplete = requires guessing
+  if (!result.unique) return 'rejected'; // Multiple solutions = invalid
+
+  // All accepted puzzles are solvable with pure logic
+  const passes = result.techniques.filter((t) => t.type === 'array_solve').length;
+
+  if (passes <= 3) return 'easy';
+  if (passes <= 10) return 'medium';
+  return 'hard';
+}
+```
+
+#### 5. Basic UI for Generated Puzzles
+
+For Phase 5, implement a minimal interface to test generated puzzles:
+
+**Simple seed input form:**
+
+```
+┌─────────────────────────────────┐
+│ Generate Puzzle                 │
+├─────────────────────────────────┤
+│ Seed:  [________________]       │
+│        (e.g., "puzzle-123")     │
+│                                 │
+│ Size:  ( ) 5×5                  │
+│        (•) 10×10  ← selected    │
+│        ( ) 15×15                │
+│                                 │
+│ [Generate Puzzle] ──────────►   │
+│                                 │
+│ Status: Ready / Generating... / │
+│         Success / Failed        │
+└─────────────────────────────────┘
+```
+
+**Component structure:**
+
+- Add to existing PuzzleSelector component or create new GeneratePuzzleForm
+- Radio buttons for size selection (5, 10, 15)
+- Text input for seed
+- Generate button triggers `generatePuzzle(size, seed)`
+- Loading state while generating
+- Error handling if generation fails (after 100 attempts)
+
+**Future UI design (saved for later phase)** - see Phase 7 below
+
+#### Implementation Tasks
+
+1. **Implement array solver**
+   - Core `solveArray()` function
+   - Find all valid block placements
+   - Intersect placements to find definite cells
+   - Unit tests for various clue patterns
+
+2. **Implement full puzzle solver**
+   - Iterate over all rows and columns
+   - Track which techniques were used
+   - Detect when stuck (no progress)
+   - Add backtracking for uniqueness verification
+
+3. **Implement pattern generator**
+   - Install and configure seedrandom library
+   - Random grid generation with seeded RNG
+   - Cellular automaton smoothing
+   - Median thresholding
+   - Clue calculation
+
+4. **Implement puzzle generator pipeline**
+   - Combine pattern generation + solver
+   - Rejection sampling loop
+   - Difficulty rating
+   - Generate batches of puzzles
+
+5. **Add basic generator UI**
+   - Seed input field
+   - Size selector (radio buttons: 5, 10, 15)
+   - Generate button with loading state
+   - Error handling and user feedback
 
 ### Phase 6: PWA & Polish
 
@@ -423,7 +708,90 @@ Runs on push to main (after CI passes):
 8. Performance optimization
 9. Deploy to GitHub Pages
 
-### Phase 7: Enhanced Features (V2)
+### Phase 7: Enhanced Puzzle Selection UI
+
+Implement comprehensive puzzle selection interface with multiple puzzle sources.
+
+#### Full Puzzle Selection UI Design
+
+**Main screen layout:**
+
+```
+┌─────────────────────────────────────┐
+│  Nonogram Puzzle                    │
+├─────────────────────────────────────┤
+│                                     │
+│  🌟 Daily Puzzles                   │
+│  ┌─────────────────────────────┐   │
+│  │ January 17, 2025            │   │
+│  │                             │   │
+│  │ [5×5 Easy] [10×10 Med] [15×15]  │
+│  │            ^^^^^^^^^ selected   │
+│  │                             │   │
+│  │ [Play Daily 10×10] ─────────►   │
+│  └─────────────────────────────┘   │
+│                                     │
+│  🎲 Quick Play                      │
+│  ┌─────────────────────────────┐   │
+│  │ Generate Random Puzzle      │   │
+│  │                             │   │
+│  │ Size:  [5×5] [10×10] [15×15]│   │
+│  │        ^^^^^ (selected)     │   │
+│  │                             │   │
+│  │ [Generate & Play] ──────────►   │
+│  └─────────────────────────────┘   │
+│                                     │
+│  📚 Pre-made Puzzles (10)          │
+│  ┌─────────────────────────────┐   │
+│  │ ❤️  Heart     • Easy  • 7×7  │   │
+│  │ 🏠 House     • Easy  • 5×5  │   │
+│  │ ☕ Coffee    • Medium • 10×10│   │
+│  │ ...                         │   │
+│  └─────────────────────────────┘   │
+│                                     │
+│  ⚙️ Advanced                        │
+│  ┌─────────────────────────────┐   │
+│  │ Load Puzzle by Seed         │   │
+│  │ Seed: [puzzle-abc123_____]  │   │
+│  │ Size: [5×5] [10×10] [15×15] │   │
+│  │ [Load Puzzle] ──────────────►   │
+│  └─────────────────────────────┘   │
+└─────────────────────────────────────┘
+```
+
+**Features:**
+
+1. **Daily Puzzles** (top, featured)
+   - Three daily puzzles (one per size: 5×5, 10×10, 15×15)
+   - Uses date + size as seed (`2025-01-17-10`)
+   - Changes daily at midnight
+   - Engagement hook for repeat visits
+
+2. **Quick Play**
+   - Size selector buttons
+   - "Generate & Play" generates random UUID seed
+   - Instant random puzzles for casual play
+
+3. **Pre-made Puzzles** (collapsible)
+   - Curated collection with icons/emoji
+   - Known-good puzzles
+   - Shows difficulty and size
+
+4. **Advanced** (collapsible)
+   - Manual seed entry
+   - Size selector
+   - Share/bookmark specific puzzles
+   - Power user feature
+
+**Implementation notes:**
+
+- Daily puzzle seeds: `${YYYY-MM-DD}-${size}` (e.g., `2025-01-17-10`)
+- Random puzzle seeds: `crypto.randomUUID()`
+- Collapsible sections for mobile
+- Loading states for generation
+- Error handling with retry option
+
+### Phase 8: Additional Enhanced Features
 
 1. Auto-save progress to localStorage
 2. Highlight active array on hover
