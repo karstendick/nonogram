@@ -106,7 +106,7 @@ function App() {
       </div>
 
       {/* Game Board */}
-      <div className="mb-6">
+      <div className="mb-6 w-full overflow-x-auto overflow-y-auto max-h-[70vh] flex justify-center">
         <GameBoard />
       </div>
 
