@@ -4,10 +4,12 @@ interface CellProps {
   state: CellState;
   row: number;
   col: number;
+  gridWidth: number;
+  gridHeight: number;
   onCellClick: (row: number, col: number, isRightClick: boolean) => void;
 }
 
-export function Cell({ state, row, col, onCellClick }: CellProps) {
+export function Cell({ state, row, col, gridWidth, gridHeight, onCellClick }: CellProps) {
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     onCellClick(row, col, false);
@@ -29,14 +31,25 @@ export function Cell({ state, row, col, onCellClick }: CellProps) {
     const base =
       'w-8 h-8 sm:w-10 sm:h-10 border border-gray-400 flex items-center justify-center cursor-pointer transition-colors select-none';
 
+    // Add thicker borders every 5 rows/columns for better readability (internal only, not edges)
+    const gridLines = [];
+    if ((col + 1) % 5 === 0 && col + 1 < gridWidth) {
+      gridLines.push('border-r-2 border-r-gray-700');
+    }
+    if ((row + 1) % 5 === 0 && row + 1 < gridHeight) {
+      gridLines.push('border-b-2 border-b-gray-700');
+    }
+
+    const gridLineClasses = gridLines.join(' ');
+
     switch (state) {
       case CellState.Filled:
-        return `${base} bg-gray-800 hover:bg-gray-700`;
+        return `${base} ${gridLineClasses} bg-gray-800 hover:bg-gray-700`;
       case CellState.MarkedEmpty:
-        return `${base} bg-white hover:bg-gray-100`;
+        return `${base} ${gridLineClasses} bg-white hover:bg-gray-100`;
       case CellState.Empty:
       default:
-        return `${base} bg-white hover:bg-gray-50`;
+        return `${base} ${gridLineClasses} bg-white hover:bg-gray-50`;
     }
   };
 

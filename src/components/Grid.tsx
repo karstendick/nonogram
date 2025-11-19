@@ -49,6 +49,8 @@ export function Grid() {
             state={cellState}
             row={rowIndex}
             col={colIndex}
+            gridWidth={currentPuzzle.width}
+            gridHeight={currentPuzzle.height}
             onCellClick={handleCellClick}
           />
         ))
