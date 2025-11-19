@@ -64,7 +64,7 @@ export function GameBoard() {
           {columnClues.map((clues, colIndex) => (
             <div
               key={colIndex}
-              className="w-8 sm:w-10 flex flex-col items-center justify-end gap-0.5 pb-1"
+              className="w-10 sm:w-12 flex flex-col items-center justify-end gap-0.5 pb-1"
               style={{
                 height: `${maxColClues * 1.5}rem`,
               }}
@@ -91,7 +91,7 @@ export function GameBoard() {
           {rowClues.map((clues, rowIndex) => (
             <div
               key={rowIndex}
-              className="h-8 sm:h-10 flex items-center justify-end gap-1 pr-1 sm:pr-2"
+              className="h-10 sm:h-12 flex items-center justify-end gap-1 pr-1 sm:pr-2"
               style={{
                 minWidth: `${maxRowClues * 2.5}rem`,
               }}

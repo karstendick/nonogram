@@ -29,7 +29,7 @@ export function Cell({ state, row, col, gridWidth, gridHeight, onCellClick }: Ce
 
   const getCellClasses = () => {
     const base =
-      'w-8 h-8 sm:w-10 sm:h-10 border border-gray-400 flex items-center justify-center cursor-pointer transition-colors select-none';
+      'w-10 h-10 sm:w-12 sm:h-12 border border-gray-400 flex items-center justify-center cursor-pointer transition-colors select-none';
 
     // Add thicker borders every 5 rows/columns for better readability (internal only, not edges)
     const gridLines = [];
