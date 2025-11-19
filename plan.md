@@ -795,11 +795,12 @@ Implement comprehensive puzzle selection interface with multiple puzzle sources.
 
 1. Auto-save progress to localStorage
 2. Highlight active array on hover
-3. Multiple color support (colored nonograms)
-4. Statistics tracking (completion time, moves)
-5. Haptic feedback (mobile)
-6. Dark mode support
-7. Drag interaction (fill/mark multiple cells in one stroke)
+3. Add thicker grid lines every 5 rows/columns to improve usability
+4. Multiple color support (colored nonograms)
+5. Statistics tracking (completion time, moves)
+6. Haptic feedback (mobile)
+7. Dark mode support
+8. Drag interaction (fill/mark multiple cells in one stroke)
    - Constrained to single array (row or column)
    - Desktop: drag follows mouse button (left = fill, right = mark)
    - Mobile: drag applies current mode
