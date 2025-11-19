@@ -56,7 +56,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright Browsers
-        run: npx playwright install chromium --with-deps
+        run: npx playwright install --with-deps
 
       - name: Run Playwright tests
         run: npm run test:e2e -- --project="Desktop Chrome" --project="iPhone 14"
