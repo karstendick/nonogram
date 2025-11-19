@@ -1,8 +1,22 @@
+// Puzzle difficulty rating
+export enum Difficulty {
+  Easy = 'easy',
+  Medium = 'medium',
+  Hard = 'hard',
+}
+
+// Internal solver cell state (separate from UI CellState)
+export enum SolverCell {
+  Unknown = 0,
+  Empty = 1,
+  Filled = 2,
+}
+
 // Raw puzzle data from JSON
 export interface PuzzleData {
   id: string;
   title: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: Difficulty;
   solution: string[]; // Human-readable format (# = filled, . = empty)
 }
 
@@ -10,7 +24,7 @@ export interface PuzzleData {
 export interface Puzzle {
   id: string;
   title: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: Difficulty;
   width: number;
   height: number;
   solution: boolean[][]; // Parsed from string[] (true = filled, false = empty)
