@@ -1,1 +1,0 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/nonogram/preview/claude-mobile-testing-setup-019HBKg6mVWq1xBY1Ha9oukn/sw.js', { scope: '/nonogram/preview/claude-mobile-testing-setup-019HBKg6mVWq1xBY1Ha9oukn/' })})}
