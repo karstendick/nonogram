@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/nonogram/preview/fix-mobile-grid/sw.js', { scope: '/nonogram/preview/fix-mobile-grid/' })})}
