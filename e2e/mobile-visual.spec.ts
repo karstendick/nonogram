@@ -22,7 +22,8 @@ test.describe('Mobile Visual Tests', () => {
     await page.goto('/');
 
     // Select the first puzzle
-    const firstPuzzle = page.locator('button[class*="cursor-pointer"]').first();
+    await expect(page.getByRole('heading', { name: 'Pre-made Puzzles' })).toBeVisible();
+    const firstPuzzle = page.getByRole('button').filter({ hasText: /×/ }).first();
     await firstPuzzle.click();
 
     // Wait for game board to load
@@ -35,26 +36,29 @@ test.describe('Mobile Visual Tests', () => {
     });
 
     // Verify game elements are visible
-    await expect(page.getByRole('button', { name: /Check Solution/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Clear Grid/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Check' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Reset' })).toBeVisible();
   });
 
   test('should show mobile mode toggle on small screens', async ({ page, isMobile }) => {
     await page.goto('/');
 
     // Navigate to game
-    const firstPuzzle = page.locator('button[class*="cursor-pointer"]').first();
+    await expect(page.getByRole('heading', { name: 'Pre-made Puzzles' })).toBeVisible();
+    const firstPuzzle = page.getByRole('button').filter({ hasText: /×/ }).first();
     await firstPuzzle.click();
 
     // Wait for game to load
     await expect(page.getByRole('button', { name: /Back to Puzzle Selection/i })).toBeVisible();
 
     // Check if mobile mode toggle exists based on viewport
-    const modeToggle = page.locator('text=Fill Mode').or(page.locator('text=Mark Mode'));
+    const fillButton = page.getByRole('button', { name: 'Fill' });
+    const markButton = page.getByRole('button', { name: 'Mark Empty' });
 
     if (isMobile) {
-      // On mobile, the mode toggle should be visible
-      await expect(modeToggle).toBeVisible();
+      // On mobile, the mode toggle buttons should be visible
+      await expect(fillButton).toBeVisible();
+      await expect(markButton).toBeVisible();
 
       // Take screenshot showing the mode toggle
       await page.screenshot({
@@ -68,7 +72,8 @@ test.describe('Mobile Visual Tests', () => {
     await page.goto('/');
 
     // Navigate to game
-    const firstPuzzle = page.locator('button[class*="cursor-pointer"]').first();
+    await expect(page.getByRole('heading', { name: 'Pre-made Puzzles' })).toBeVisible();
+    const firstPuzzle = page.getByRole('button').filter({ hasText: /×/ }).first();
     await firstPuzzle.click();
 
     // Scroll to instructions
@@ -88,7 +93,8 @@ test.describe('Mobile Visual Tests', () => {
     await page.getByRole('button', { name: 'Generate Puzzle' }).click();
 
     // Wait for form to be visible
-    await expect(page.locator('text=Puzzle Size')).toBeVisible();
+    await expect(page.locator('text=Size')).toBeVisible();
+    await expect(page.getByLabel('Seed')).toBeVisible();
 
     // Take screenshot
     await page.screenshot({
