@@ -68,7 +68,7 @@ test.describe('Mobile Visual Tests', () => {
     }
   });
 
-  test('should check layout of full game view', async ({ page, _isMobile }) => {
+  test('should check layout of full game view', async ({ page }) => {
     await page.goto('/');
 
     // Navigate to game
