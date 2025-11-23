@@ -96,17 +96,22 @@ test.describe('Mobile Interaction Tests', () => {
     await expect(puzzleCards.first()).toBeVisible();
   });
 
-  test('should scroll content properly on mobile', async ({ page }) => {
+  test('should scroll content properly on mobile', async ({ page, isMobile }) => {
     // Scroll to bottom of page
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 
-    // Verify we can see instructions at the bottom
-    await expect(page.locator('text=Desktop:')).toBeVisible();
+    // Verify we can see controls at the bottom
+    await expect(page.getByRole('button', { name: 'Check' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Reset' })).toBeVisible();
 
     // Scroll back to top
     await page.evaluate(() => window.scrollTo(0, 0));
 
-    // Verify we can see the header
-    await expect(page.getByRole('heading', { name: 'Nonogram Puzzle' })).toBeVisible();
+    // Verify we can see the header (mobile has compact header, desktop has full)
+    if (isMobile) {
+      await expect(page.getByRole('button', { name: /Back/i })).toBeVisible();
+    } else {
+      await expect(page.getByRole('heading', { name: 'Nonogram Puzzle' })).toBeVisible();
+    }
   });
 });

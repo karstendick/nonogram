@@ -75,54 +75,68 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center p-4 sm:p-8">
-      {/* Header */}
-      <div className="text-center mb-6">
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Nonogram Puzzle</h1>
-        {currentPuzzle && (
-          <div className="text-sm sm:text-base text-gray-600">
-            <span className="font-semibold">{currentPuzzle.title}</span>
-            <span className="mx-2">•</span>
-            <span className="capitalize">{currentPuzzle.difficulty}</span>
-            <span className="mx-2">•</span>
-            <span>
+    <div className="min-h-screen bg-white sm:bg-gradient-to-br sm:from-blue-50 sm:to-indigo-100 flex flex-col items-center sm:p-8">
+      {/* Header - minimal on mobile, full on desktop */}
+      <div className="w-full sm:text-center sm:mb-6">
+        {/* Mobile header - compact */}
+        <div className="sm:hidden flex items-center justify-between px-2 py-2 bg-gray-50">
+          <button
+            onClick={() => setView('select')}
+            className="p-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+            aria-label="Back to puzzle selection"
+          >
+            ← Back
+          </button>
+          {currentPuzzle && (
+            <div className="text-xs text-gray-600">
               {currentPuzzle.width} × {currentPuzzle.height}
-            </span>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop header - full */}
+        <div className="hidden sm:block">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Nonogram Puzzle</h1>
+          {currentPuzzle && (
+            <div className="text-sm sm:text-base text-gray-600">
+              <span className="font-semibold">{currentPuzzle.title}</span>
+              <span className="mx-2">•</span>
+              <span className="capitalize">{currentPuzzle.difficulty}</span>
+              <span className="mx-2">•</span>
+              <span>
+                {currentPuzzle.width} × {currentPuzzle.height}
+              </span>
+            </div>
+          )}
+          <button
+            onClick={() => setView('select')}
+            className="mt-4 px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
+          >
+            ← Back to Puzzle Selection
+          </button>
+        </div>
       </div>
 
-      {/* Back button */}
-      <button
-        onClick={() => setView('select')}
-        className="mb-4 px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
-      >
-        ← Back to Puzzle Selection
-      </button>
-
       {/* Mobile Mode Toggle */}
-      <div className="w-full max-w-xs mb-4 sm:hidden">
+      <div className="w-full px-2 mb-2 sm:hidden">
         <ModeToggle />
       </div>
 
-      {/* Game Board */}
-      <div className="mb-6 w-full overflow-x-auto overflow-y-auto max-h-[70vh] flex justify-center">
+      {/* Game Board - maximize space on mobile */}
+      <div className="w-full flex-1 overflow-x-auto overflow-y-auto flex justify-center items-start sm:mb-6 sm:flex-initial sm:max-h-[70vh]">
         <GameBoard />
       </div>
 
-      {/* Controls */}
-      <div className="w-full max-w-md">
+      {/* Controls - compact on mobile */}
+      <div className="w-full px-2 pb-2 sm:max-w-md sm:px-0">
         <Controls />
       </div>
 
-      {/* Instructions */}
-      <div className="mt-8 max-w-md text-center text-sm text-gray-600">
+      {/* Instructions - desktop only */}
+      <div className="hidden sm:block mt-8 max-w-md text-center text-sm text-gray-600">
         <p className="mb-2">
           <span className="font-semibold">Desktop:</span> Left-click to fill, right-click to mark
           empty
-        </p>
-        <p className="sm:hidden">
-          <span className="font-semibold">Mobile:</span> Use the toggle above to switch modes
         </p>
       </div>
     </div>

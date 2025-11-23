@@ -68,7 +68,7 @@ test.describe('Mobile Visual Tests', () => {
     }
   });
 
-  test('should check layout of instructions on mobile', async ({ page }) => {
+  test('should check layout of full game view', async ({ page, _isMobile }) => {
     await page.goto('/');
 
     // Navigate to game
@@ -76,14 +76,18 @@ test.describe('Mobile Visual Tests', () => {
     const firstPuzzle = page.getByRole('button').filter({ hasText: /×/ }).first();
     await firstPuzzle.click();
 
-    // Scroll to instructions
-    await page.locator('text=Desktop:').scrollIntoViewIfNeeded();
+    // Scroll to bottom to see controls
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 
-    // Take screenshot of instructions area
+    // Take screenshot of full game layout
     await page.screenshot({
-      path: `screenshots/instructions-${test.info().project.name}.png`,
+      path: `screenshots/full-game-layout-${test.info().project.name}.png`,
       fullPage: true,
     });
+
+    // Verify controls are visible
+    await expect(page.getByRole('button', { name: 'Check' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Reset' })).toBeVisible();
   });
 
   test('should verify responsive layout of puzzle generation tab', async ({ page }) => {

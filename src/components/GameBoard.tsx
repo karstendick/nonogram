@@ -45,7 +45,7 @@ export function GameBoard() {
   const maxColClues = Math.max(...columnClues.map((clue) => clue.length));
 
   return (
-    <div className="inline-block bg-gray-50 p-4 rounded-lg">
+    <div className="inline-block bg-gray-50 p-1 sm:p-4 rounded-none sm:rounded-lg">
       {/* Top section: spacer + column clues */}
       <div className="flex gap-2 mb-1">
         {/* Top-left corner spacer */}
