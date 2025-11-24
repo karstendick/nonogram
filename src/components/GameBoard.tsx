@@ -44,12 +44,15 @@ export function GameBoard() {
   // Find max number of clues for any column (for height calculation)
   const maxColClues = Math.max(...columnClues.map((clue) => clue.length));
 
-  // Use smaller cells for large puzzles on mobile
+  // Use smaller cells for large puzzles on mobile to fit entire puzzle on screen
   const isLargePuzzle = width > 10 || height > 10;
-  const mobileCellWidth = isLargePuzzle ? 'w-8' : 'w-10';
-  const mobileCellHeight = isLargePuzzle ? 'h-8' : 'h-10';
+  const mobileCellWidth = isLargePuzzle ? 'w-[22px]' : 'w-10';
+  const mobileCellHeight = isLargePuzzle ? 'h-[22px]' : 'h-10';
   const mobilePadding = isLargePuzzle ? 'p-0.5' : 'p-1';
-  const mobileClueTextSize = isLargePuzzle ? 'text-[0.625rem]' : 'text-xs';
+  const mobileClueTextSize = isLargePuzzle ? 'text-[0.5rem]' : 'text-xs';
+  const mobileClueWidth = isLargePuzzle ? maxRowClues * 0.9 : maxRowClues * 1.25;
+  // Column clues need full height for desktop to prevent cutoff
+  const clueHeight = maxColClues * 1.5;
 
   return (
     <div className={`inline-block bg-gray-50 ${mobilePadding} sm:p-4 rounded-none sm:rounded-lg`}>
@@ -59,7 +62,7 @@ export function GameBoard() {
         <div
           className="shrink-0"
           style={{
-            width: `${maxRowClues * 1.25}rem`,
+            width: `${mobileClueWidth}rem`,
           }}
         />
         {/* Column clues */}
@@ -74,7 +77,7 @@ export function GameBoard() {
               key={colIndex}
               className={`${mobileCellWidth} sm:w-12 flex flex-col items-center justify-end gap-0 sm:gap-0.5 pb-0.5 sm:pb-1`}
               style={{
-                height: `${maxColClues * 1.125}rem`,
+                minHeight: `${clueHeight}rem`,
               }}
             >
               {clues.map((clue, idx) => (
@@ -101,7 +104,7 @@ export function GameBoard() {
               key={rowIndex}
               className={`${mobileCellHeight} sm:h-12 flex items-center justify-end gap-0.5 sm:gap-1 pr-0.5 sm:pr-2`}
               style={{
-                minWidth: `${maxRowClues * 1.25}rem`,
+                minWidth: `${mobileClueWidth}rem`,
               }}
             >
               {clues.map((clue, idx) => (

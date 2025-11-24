@@ -27,10 +27,12 @@ export function Cell({ state, row, col, gridWidth, gridHeight, onCellClick }: Ce
     }
   };
 
+  // Use smaller cells for large puzzles on mobile to fit entire puzzle on screen
+  const isLargePuzzle = gridWidth > 10 || gridHeight > 10;
+
   const getCellClasses = () => {
-    // Use smaller cells for large puzzles on mobile to fit more on screen
-    const isLargePuzzle = gridWidth > 10 || gridHeight > 10;
-    const mobileSizeClass = isLargePuzzle ? 'w-8 h-8' : 'w-10 h-10';
+    // 15x15 uses ~22px cells, smaller puzzles use 40px
+    const mobileSizeClass = isLargePuzzle ? 'w-[22px] h-[22px]' : 'w-10 h-10';
 
     const base = `${mobileSizeClass} sm:w-12 sm:h-12 border border-gray-400 flex items-center justify-center cursor-pointer transition-colors select-none`;
 
@@ -67,7 +69,11 @@ export function Cell({ state, row, col, gridWidth, gridHeight, onCellClick }: Ce
       aria-label={`Cell ${row + 1}, ${col + 1}`}
     >
       {state === CellState.MarkedEmpty && (
-        <span className="text-gray-400 text-sm sm:text-base font-bold">×</span>
+        <span
+          className={`text-gray-400 font-bold ${isLargePuzzle ? 'text-xs' : 'text-sm sm:text-base'}`}
+        >
+          ×
+        </span>
       )}
     </div>
   );
