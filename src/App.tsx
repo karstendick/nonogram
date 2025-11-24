@@ -142,7 +142,7 @@ function App() {
       </div>
 
       {/* Completion Modal */}
-      <CompletionModal />
+      <CompletionModal onBackToSelection={() => setView('select')} />
     </div>
   );
 }
