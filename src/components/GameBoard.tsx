@@ -48,16 +48,19 @@ export function GameBoard() {
   const isLargePuzzle = width > 10 || height > 10;
   const mobileCellWidth = isLargePuzzle ? 'w-[22px]' : 'w-10';
   const mobileCellHeight = isLargePuzzle ? 'h-[22px]' : 'h-10';
-  const mobilePadding = isLargePuzzle ? 'p-0.5' : 'p-1';
+  const mobilePadding = isLargePuzzle ? 'p-0' : 'p-1';
   const mobileClueTextSize = isLargePuzzle ? 'text-[0.5rem]' : 'text-xs';
   const mobileClueWidth = isLargePuzzle ? maxRowClues * 0.9 : maxRowClues * 1.25;
+  const mobileGap = isLargePuzzle ? 'gap-0' : 'gap-1';
+  const mobileRowCluePadding = isLargePuzzle ? 'pr-0' : 'pr-0.5';
+  const mobileColCluePadding = isLargePuzzle ? 'pb-0' : 'pb-0.5';
   // Column clues need full height for desktop to prevent cutoff
   const clueHeight = maxColClues * 1.5;
 
   return (
     <div className={`inline-block bg-gray-50 ${mobilePadding} sm:p-4 rounded-none sm:rounded-lg`}>
       {/* Top section: spacer + column clues */}
-      <div className="flex gap-1 sm:gap-2 mb-1">
+      <div className={`flex ${mobileGap} sm:gap-2 mb-0 sm:mb-1`}>
         {/* Top-left corner spacer */}
         <div
           className="shrink-0"
@@ -75,7 +78,7 @@ export function GameBoard() {
           {columnClues.map((clues, colIndex) => (
             <div
               key={colIndex}
-              className={`${mobileCellWidth} sm:w-12 flex flex-col items-center justify-end gap-0 sm:gap-0.5 pb-0.5 sm:pb-1`}
+              className={`${mobileCellWidth} sm:w-12 flex flex-col items-center justify-end gap-0 sm:gap-0.5 ${mobileColCluePadding} sm:pb-1`}
               style={{
                 minHeight: `${clueHeight}rem`,
               }}
@@ -96,13 +99,13 @@ export function GameBoard() {
       </div>
 
       {/* Bottom section: row clues + grid */}
-      <div className="flex gap-1 sm:gap-2">
+      <div className={`flex ${mobileGap} sm:gap-2`}>
         {/* Row clues */}
         <div className="flex flex-col gap-0 shrink-0">
           {rowClues.map((clues, rowIndex) => (
             <div
               key={rowIndex}
-              className={`${mobileCellHeight} sm:h-12 flex items-center justify-end gap-0.5 sm:gap-1 pr-0.5 sm:pr-2`}
+              className={`${mobileCellHeight} sm:h-12 flex items-center justify-end gap-0.5 sm:gap-1 ${mobileRowCluePadding} sm:pr-2`}
               style={{
                 minWidth: `${mobileClueWidth}rem`,
               }}
