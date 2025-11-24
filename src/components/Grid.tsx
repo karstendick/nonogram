@@ -51,6 +51,7 @@ export function Grid() {
             col={colIndex}
             gridWidth={currentPuzzle.width}
             gridHeight={currentPuzzle.height}
+            solutionValue={currentPuzzle.solution[rowIndex][colIndex]}
             onCellClick={handleCellClick}
           />
         ))

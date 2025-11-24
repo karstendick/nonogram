@@ -6,10 +6,19 @@ interface CellProps {
   col: number;
   gridWidth: number;
   gridHeight: number;
+  solutionValue: boolean;
   onCellClick: (row: number, col: number, isRightClick: boolean) => void;
 }
 
-export function Cell({ state, row, col, gridWidth, gridHeight, onCellClick }: CellProps) {
+export function Cell({
+  state,
+  row,
+  col,
+  gridWidth,
+  gridHeight,
+  solutionValue,
+  onCellClick,
+}: CellProps) {
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     onCellClick(row, col, false);
@@ -30,6 +39,13 @@ export function Cell({ state, row, col, gridWidth, gridHeight, onCellClick }: Ce
   // Use smaller cells for large puzzles on mobile to fit entire puzzle on screen
   const isLargePuzzle = gridWidth > 10 || gridHeight > 10;
 
+  // Check if this cell is a mistake
+  // - Filled when it should be empty
+  // - Marked empty when it should be filled
+  const isMistake =
+    (state === CellState.Filled && !solutionValue) ||
+    (state === CellState.MarkedEmpty && solutionValue);
+
   const getCellClasses = () => {
     // 15x15 uses ~22px cells, smaller puzzles use 40px
     const mobileSizeClass = isLargePuzzle ? 'w-[22px] h-[22px]' : 'w-10 h-10';
@@ -49,8 +65,16 @@ export function Cell({ state, row, col, gridWidth, gridHeight, onCellClick }: Ce
 
     switch (state) {
       case CellState.Filled:
+        // Show red for mistakes, normal gray for correct
+        if (isMistake) {
+          return `${base} ${gridLineClasses} bg-red-600 hover:bg-red-500`;
+        }
         return `${base} ${gridLineClasses} bg-gray-800 hover:bg-gray-700`;
       case CellState.MarkedEmpty:
+        // Show red background for mistakes (marked empty but should be filled)
+        if (isMistake) {
+          return `${base} ${gridLineClasses} bg-red-100 hover:bg-red-50`;
+        }
         return `${base} ${gridLineClasses} bg-white hover:bg-gray-100`;
       case CellState.Empty:
       default:
@@ -70,7 +94,9 @@ export function Cell({ state, row, col, gridWidth, gridHeight, onCellClick }: Ce
     >
       {state === CellState.MarkedEmpty && (
         <span
-          className={`text-gray-400 font-bold ${isLargePuzzle ? 'text-lg sm:text-4xl' : 'text-3xl sm:text-4xl'}`}
+          className={`font-bold ${isLargePuzzle ? 'text-lg sm:text-4xl' : 'text-3xl sm:text-4xl'} ${
+            isMistake ? 'text-red-600' : 'text-gray-400'
+          }`}
         >
           ×
         </span>

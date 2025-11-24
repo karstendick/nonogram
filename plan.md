@@ -108,7 +108,7 @@ nonogram/
   - Label buttons with visual icons (filled square for Fill, X for Mark Empty) instead of text labels
   - Eliminate excessive whitespace between puzzle and buttons
 - [ ] Click completed clue to auto-mark remaining cells as empty
-- [ ] Real-time mistake highlighting (red) to prevent wasted effort
+- [x] Real-time mistake highlighting (red) to prevent wasted effort
 
 ### Phase 7: Enhanced Puzzle Selection UI
 
