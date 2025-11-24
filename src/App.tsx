@@ -117,14 +117,14 @@ function App() {
         </div>
       </div>
 
-      {/* Mobile Mode Toggle */}
-      <div className="w-full px-2 mb-2 sm:hidden">
-        <ModeToggle />
-      </div>
-
       {/* Game Board - maximize space on mobile */}
       <div className="w-full flex-1 overflow-x-auto overflow-y-auto flex justify-center items-start sm:mb-6 sm:flex-initial sm:max-h-[70vh]">
         <GameBoard />
+      </div>
+
+      {/* Mobile Mode Toggle - below puzzle */}
+      <div className="w-full px-2 mt-0.5 mb-2 sm:hidden">
+        <ModeToggle />
       </div>
 
       {/* Controls - compact on mobile */}
