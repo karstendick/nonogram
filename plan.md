@@ -99,7 +99,7 @@ nonogram/
 - [ ] Component tests
 - [ ] Animations and transitions
 - [ ] Performance optimization
-- [ ] Puzzle completion recognition/celebration
+- [x] Puzzle completion recognition/celebration
   - Check playerGrid against cached solution (don't run solver on every move)
   - Display congratulations message/animation when puzzle is solved
 - [x] Larger X marks for marked empty cells (should fill more of the cell)

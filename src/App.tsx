@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { GameBoard } from './components/GameBoard';
 import { ModeToggle } from './components/ModeToggle';
 import { Controls } from './components/Controls';
+import { CompletionModal } from './components/CompletionModal';
 import { PuzzleSelector } from './components/PuzzleSelector';
 import { PuzzleGenerator } from './components/PuzzleGenerator';
 import { useGameStore } from './store/gameStore';
@@ -139,6 +140,9 @@ function App() {
           empty
         </p>
       </div>
+
+      {/* Completion Modal */}
+      <CompletionModal />
     </div>
   );
 }

@@ -72,6 +72,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       historyIndex: newHistory.length - 1,
       moves: get().moves + 1,
     });
+
+    // Check if puzzle is complete after this move
+    get().checkSolution();
   },
 
   // Mark multiple cells at once (single history entry)
@@ -95,6 +98,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       historyIndex: newHistory.length - 1,
       moves: get().moves + 1,
     });
+
+    // Check if puzzle is complete after this move
+    get().checkSolution();
   },
 
   // Set interaction mode (for mobile)
