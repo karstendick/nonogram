@@ -16,6 +16,7 @@ interface GameStore {
   // Actions
   loadPuzzle: (puzzle: Puzzle) => void;
   setCellState: (row: number, col: number, state: CellState) => void;
+  markMultipleCells: (cells: Array<{ row: number; col: number; state: CellState }>) => void;
   setMode: (mode: InteractionMode) => void;
   resetPuzzle: () => void;
   checkSolution: () => boolean;
@@ -61,6 +62,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newGrid = playerGrid.map((r, i) =>
       i === row ? r.map((c, j) => (j === col ? state : c)) : [...r]
     );
+
+    // Truncate history after current index and add new state
+    const newHistory = [...history.slice(0, historyIndex + 1), newGrid];
+
+    set({
+      playerGrid: newGrid,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      moves: get().moves + 1,
+    });
+  },
+
+  // Mark multiple cells at once (single history entry)
+  markMultipleCells: (cells: Array<{ row: number; col: number; state: CellState }>) => {
+    const { playerGrid, history, historyIndex, currentPuzzle } = get();
+
+    if (!currentPuzzle || cells.length === 0) return;
+
+    // Create new grid with all updated cells
+    const newGrid = playerGrid.map((row) => [...row]);
+    cells.forEach(({ row, col, state }) => {
+      newGrid[row][col] = state;
+    });
 
     // Truncate history after current index and add new state
     const newHistory = [...history.slice(0, historyIndex + 1), newGrid];

@@ -3,7 +3,7 @@ import { useGameStore } from '../store/gameStore';
 import { CellState } from '../types';
 
 export function GameBoard() {
-  const { currentPuzzle, playerGrid } = useGameStore();
+  const { currentPuzzle, playerGrid, markMultipleCells } = useGameStore();
 
   if (!currentPuzzle) {
     return <div className="text-gray-600">No puzzle loaded</div>;
@@ -36,6 +36,40 @@ export function GameBoard() {
       }
     }
     return true;
+  };
+
+  // Handle clicking a completed row clue
+  const handleRowClueClick = (rowIndex: number) => {
+    if (!isRowComplete(rowIndex)) return;
+
+    // Find all empty cells in this row
+    const cellsToMark = [];
+    for (let col = 0; col < width; col++) {
+      if (playerGrid[rowIndex][col] === CellState.Empty) {
+        cellsToMark.push({ row: rowIndex, col, state: CellState.MarkedEmpty });
+      }
+    }
+
+    if (cellsToMark.length > 0) {
+      markMultipleCells(cellsToMark);
+    }
+  };
+
+  // Handle clicking a completed column clue
+  const handleColClueClick = (colIndex: number) => {
+    if (!isColComplete(colIndex)) return;
+
+    // Find all empty cells in this column
+    const cellsToMark = [];
+    for (let row = 0; row < height; row++) {
+      if (playerGrid[row][colIndex] === CellState.Empty) {
+        cellsToMark.push({ row, col: colIndex, state: CellState.MarkedEmpty });
+      }
+    }
+
+    if (cellsToMark.length > 0) {
+      markMultipleCells(cellsToMark);
+    }
   };
 
   // Find max number of clues for any row (for width calculation)
@@ -83,16 +117,30 @@ export function GameBoard() {
                 minHeight: `${clueHeight}rem`,
               }}
             >
-              {clues.map((clue, idx) => (
-                <div
-                  key={idx}
-                  className={`${mobileClueTextSize} sm:text-sm font-semibold text-center ${
-                    isColComplete(colIndex) ? 'text-gray-400 line-through' : 'text-gray-700'
-                  }`}
-                >
-                  {clue}
-                </div>
-              ))}
+              {clues.map((clue, idx) => {
+                const isComplete = isColComplete(colIndex);
+                return (
+                  <div
+                    key={idx}
+                    role={isComplete ? 'button' : undefined}
+                    tabIndex={isComplete ? 0 : undefined}
+                    onClick={() => handleColClueClick(colIndex)}
+                    onKeyDown={(e) => {
+                      if (isComplete && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault();
+                        handleColClueClick(colIndex);
+                      }
+                    }}
+                    className={`${mobileClueTextSize} sm:text-sm font-semibold text-center ${
+                      isComplete
+                        ? 'text-gray-400 line-through cursor-pointer hover:text-gray-500'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    {clue}
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>
@@ -110,16 +158,30 @@ export function GameBoard() {
                 minWidth: `${mobileClueWidth}rem`,
               }}
             >
-              {clues.map((clue, idx) => (
-                <div
-                  key={idx}
-                  className={`${mobileClueTextSize} sm:text-sm font-semibold text-center ${
-                    isRowComplete(rowIndex) ? 'text-gray-400 line-through' : 'text-gray-700'
-                  }`}
-                >
-                  {clue}
-                </div>
-              ))}
+              {clues.map((clue, idx) => {
+                const isComplete = isRowComplete(rowIndex);
+                return (
+                  <div
+                    key={idx}
+                    role={isComplete ? 'button' : undefined}
+                    tabIndex={isComplete ? 0 : undefined}
+                    onClick={() => handleRowClueClick(rowIndex)}
+                    onKeyDown={(e) => {
+                      if (isComplete && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault();
+                        handleRowClueClick(rowIndex);
+                      }
+                    }}
+                    className={`${mobileClueTextSize} sm:text-sm font-semibold text-center ${
+                      isComplete
+                        ? 'text-gray-400 line-through cursor-pointer hover:text-gray-500'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    {clue}
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>
