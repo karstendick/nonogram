@@ -41,9 +41,12 @@ test.describe('Large Puzzle Mobile Tests', () => {
 
     // Cells should maintain minimum size
     if (isMobile) {
-      // On mobile, cells should still be at least 40px even for large puzzles
-      expect(box.width).toBeGreaterThanOrEqual(40);
-      expect(box.height).toBeGreaterThanOrEqual(40);
+      // On mobile, large puzzles (15x15) use 32px cells to fit more on screen
+      expect(box.width).toBeGreaterThanOrEqual(32);
+      expect(box.height).toBeGreaterThanOrEqual(32);
+      // Verify we're using the smaller size for large puzzles
+      expect(box.width).toBeLessThanOrEqual(34); // Account for potential rounding
+      expect(box.height).toBeLessThanOrEqual(34);
     }
 
     // Cells should be square

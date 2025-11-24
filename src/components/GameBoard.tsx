@@ -44,14 +44,22 @@ export function GameBoard() {
   // Find max number of clues for any column (for height calculation)
   const maxColClues = Math.max(...columnClues.map((clue) => clue.length));
 
+  // Use smaller cells for large puzzles on mobile
+  const isLargePuzzle = width > 10 || height > 10;
+  const mobileCellWidth = isLargePuzzle ? 'w-8' : 'w-10';
+  const mobileCellHeight = isLargePuzzle ? 'h-8' : 'h-10';
+  const mobilePadding = isLargePuzzle ? 'p-0.5' : 'p-1';
+  const mobileClueTextSize = isLargePuzzle ? 'text-[0.625rem]' : 'text-xs';
+
   return (
-    <div className="inline-block bg-gray-50 p-1 sm:p-4 rounded-none sm:rounded-lg">
+    <div className={`inline-block bg-gray-50 ${mobilePadding} sm:p-4 rounded-none sm:rounded-lg`}>
       {/* Top section: spacer + column clues */}
-      <div className="flex gap-2 mb-1">
+      <div className="flex gap-1 sm:gap-2 mb-1">
         {/* Top-left corner spacer */}
         <div
+          className="shrink-0"
           style={{
-            width: `${maxRowClues * 2.5}rem`,
+            width: `${maxRowClues * 1.25}rem`,
           }}
         />
         {/* Column clues */}
@@ -64,15 +72,15 @@ export function GameBoard() {
           {columnClues.map((clues, colIndex) => (
             <div
               key={colIndex}
-              className="w-10 sm:w-12 flex flex-col items-center justify-end gap-0.5 pb-1"
+              className={`${mobileCellWidth} sm:w-12 flex flex-col items-center justify-end gap-0 sm:gap-0.5 pb-0.5 sm:pb-1`}
               style={{
-                height: `${maxColClues * 1.5}rem`,
+                height: `${maxColClues * 1.125}rem`,
               }}
             >
               {clues.map((clue, idx) => (
                 <div
                   key={idx}
-                  className={`text-xs sm:text-sm font-semibold text-center ${
+                  className={`${mobileClueTextSize} sm:text-sm font-semibold text-center ${
                     isColComplete(colIndex) ? 'text-gray-400 line-through' : 'text-gray-700'
                   }`}
                 >
@@ -85,21 +93,21 @@ export function GameBoard() {
       </div>
 
       {/* Bottom section: row clues + grid */}
-      <div className="flex gap-2">
+      <div className="flex gap-1 sm:gap-2">
         {/* Row clues */}
-        <div className="flex flex-col gap-0">
+        <div className="flex flex-col gap-0 shrink-0">
           {rowClues.map((clues, rowIndex) => (
             <div
               key={rowIndex}
-              className="h-10 sm:h-12 flex items-center justify-end gap-1 pr-1 sm:pr-2"
+              className={`${mobileCellHeight} sm:h-12 flex items-center justify-end gap-0.5 sm:gap-1 pr-0.5 sm:pr-2`}
               style={{
-                minWidth: `${maxRowClues * 2.5}rem`,
+                minWidth: `${maxRowClues * 1.25}rem`,
               }}
             >
               {clues.map((clue, idx) => (
                 <div
                   key={idx}
-                  className={`text-xs sm:text-sm font-semibold text-center ${
+                  className={`${mobileClueTextSize} sm:text-sm font-semibold text-center ${
                     isRowComplete(rowIndex) ? 'text-gray-400 line-through' : 'text-gray-700'
                   }`}
                 >
