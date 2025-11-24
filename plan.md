@@ -102,7 +102,7 @@ nonogram/
 - [ ] Puzzle completion recognition/celebration
   - Check playerGrid against cached solution (don't run solver on every move)
   - Display congratulations message/animation when puzzle is solved
-- [ ] Larger X marks for marked empty cells (should fill more of the cell)
+- [x] Larger X marks for marked empty cells (should fill more of the cell)
 - [ ] Improve mobile mode toggle buttons
   - Move Fill/Mark Empty buttons below the puzzle instead of above
   - Label buttons with visual icons (filled square for Fill, X for Mark Empty) instead of text labels

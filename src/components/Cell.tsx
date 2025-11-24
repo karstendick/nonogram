@@ -70,7 +70,7 @@ export function Cell({ state, row, col, gridWidth, gridHeight, onCellClick }: Ce
     >
       {state === CellState.MarkedEmpty && (
         <span
-          className={`text-gray-400 font-bold ${isLargePuzzle ? 'text-xs' : 'text-sm sm:text-base'}`}
+          className={`text-gray-400 font-bold ${isLargePuzzle ? 'text-lg sm:text-4xl' : 'text-3xl sm:text-4xl'}`}
         >
           ×
         </span>
