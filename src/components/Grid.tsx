@@ -38,7 +38,7 @@ export function Grid() {
       tabIndex={0}
       className="grid gap-0 bg-white shadow-md"
       style={{
-        gridTemplateColumns: `repeat(${currentPuzzle.width}, minmax(0, 1fr))`,
+        gridTemplateColumns: `repeat(${currentPuzzle.width}, auto)`,
       }}
       aria-label="Nonogram game grid"
     >

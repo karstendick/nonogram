@@ -13,20 +13,20 @@ export function Controls() {
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       {/* Undo/Redo buttons */}
       <div className="flex gap-2">
         <button
           onClick={undo}
           disabled={!canUndo()}
-          className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md font-medium hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-200 text-gray-700 rounded-md text-sm sm:text-base font-medium hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Undo
         </button>
         <button
           onClick={redo}
           disabled={!canRedo()}
-          className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md font-medium hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-200 text-gray-700 rounded-md text-sm sm:text-base font-medium hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Redo
         </button>
@@ -36,13 +36,13 @@ export function Controls() {
       <div className="flex gap-2">
         <button
           onClick={resetPuzzle}
-          className="flex-1 px-4 py-2 bg-red-100 text-red-700 rounded-md font-medium hover:bg-red-200 transition-colors"
+          className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-100 text-red-700 rounded-md text-sm sm:text-base font-medium hover:bg-red-200 transition-colors"
         >
           Reset
         </button>
         <button
           onClick={handleCheck}
-          className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
+          className={`flex-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md text-sm sm:text-base font-medium transition-colors ${
             isComplete ? 'bg-green-600 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'
           }`}
         >

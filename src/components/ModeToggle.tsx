@@ -5,11 +5,11 @@ export function ModeToggle() {
   const { currentMode, setMode } = useGameStore();
 
   return (
-    <div className="flex gap-2 p-2 bg-gray-100 rounded-lg">
+    <div className="flex gap-2 p-1.5 bg-gray-100 rounded-lg">
       <button
         onClick={() => setMode(InteractionMode.Fill)}
         className={`
-          flex-1 px-4 py-2 rounded-md font-medium transition-colors
+          flex-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
           ${
             currentMode === InteractionMode.Fill
               ? 'bg-gray-800 text-white'
@@ -22,7 +22,7 @@ export function ModeToggle() {
       <button
         onClick={() => setMode(InteractionMode.MarkEmpty)}
         className={`
-          flex-1 px-4 py-2 rounded-md font-medium transition-colors
+          flex-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
           ${
             currentMode === InteractionMode.MarkEmpty
               ? 'bg-gray-800 text-white'

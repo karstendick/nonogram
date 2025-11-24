@@ -92,13 +92,15 @@ nonogram/
 
 ### Phase 6: PWA & Polish (In Progress)
 
+- [x] Deploy to GitHub Pages
 - [ ] Design custom app icons (favicon, PWA icons)
 - [ ] Configure PWA manifest
 - [ ] Service worker for offline support
 - [ ] Component tests
 - [ ] Animations and transitions
 - [ ] Performance optimization
-- [ ] Deploy to GitHub Pages
+- [ ] Click completed clue to auto-mark remaining cells as empty
+- [ ] Real-time mistake highlighting (red) to prevent wasted effort
 
 ### Phase 7: Enhanced Puzzle Selection UI
 
