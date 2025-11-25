@@ -14,8 +14,9 @@ test.describe('Mobile Visual Tests', () => {
     });
 
     // Verify key elements are visible
-    await expect(page.getByRole('button', { name: 'Pre-made Puzzles' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Generate Puzzle' })).toBeVisible();
+    await expect(page.getByText('Quick Play')).toBeVisible();
+    await expect(page.getByText('Enter a Seed')).toBeVisible();
+    await expect(page.getByText('Pre-made Puzzles')).toBeVisible();
   });
 
   test('should display game board properly on mobile', async ({ page }) => {
@@ -105,8 +106,9 @@ test.describe('Mobile Visual Tests', () => {
   test('should verify responsive layout of puzzle generation tab', async ({ page }) => {
     await page.goto('/');
 
-    // Click on Generate Puzzle tab
-    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
+    // Navigate to Enter a Seed page
+    const seedButton = page.getByText('Enter a Seed').locator('..');
+    await seedButton.click();
 
     // Wait for form to be visible
     await expect(page.locator('text=Size')).toBeVisible();

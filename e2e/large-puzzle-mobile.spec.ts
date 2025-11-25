@@ -7,20 +7,18 @@ test.describe('Large Puzzle Mobile Tests', () => {
   }) => {
     await page.goto('/');
 
-    // Navigate to pre-made puzzles
-    const premadeButton = page.getByText('Pre-made Puzzles').locator('..');
-    await premadeButton.click();
-
-    // Navigate to Generate Puzzle tab
-    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
+    // Navigate to Enter a Seed page
+    const seedButton = page.getByText('Enter a Seed').locator('..');
+    await seedButton.click();
 
     // Generate a 15x15 puzzle
     await page.getByLabel('Seed').fill('test-15x15');
     await page.getByLabel('15×15').check();
-    await page.getByRole('button', { name: 'Generate Puzzle' }).last().click();
+    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
 
-    // Wait for game board to load
-    await expect(page.getByRole('button', { name: /Back to Home/i })).toBeVisible();
+    // Wait for game board to load - wait for actual cells to appear
+    const cells = page.getByRole('gridcell');
+    await expect(cells.first()).toBeVisible({ timeout: 10000 });
 
     // Take screenshot
     if (isMobile) {
@@ -30,8 +28,7 @@ test.describe('Large Puzzle Mobile Tests', () => {
       });
     }
 
-    // Get cells
-    const cells = page.getByRole('gridcell');
+    // Verify cell count
     const cellCount = await cells.count();
     expect(cellCount).toBe(225); // 15x15
 

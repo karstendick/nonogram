@@ -68,23 +68,20 @@ test.describe('Cell Sizing Tests', () => {
   test('cells should remain square on larger puzzles', async ({ page }) => {
     await page.goto('/');
 
-    // Navigate to pre-made puzzles
-    const premadeButton = page.getByText('Pre-made Puzzles').locator('..');
-    await premadeButton.click();
-
-    // Navigate to Generate Puzzle tab
-    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
+    // Navigate to Enter a Seed page
+    const seedButton = page.getByText('Enter a Seed').locator('..');
+    await seedButton.click();
 
     // Generate a larger puzzle (15x15)
     await page.getByLabel('Seed').fill('test-15x15-puzzle');
     await page.getByLabel('15×15').check();
-    await page.getByRole('button', { name: 'Generate Puzzle' }).last().click();
+    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
 
-    // Wait for game board to load
-    await expect(page.getByRole('button', { name: /Back to Home/i })).toBeVisible();
-
-    // Get all cells
+    // Wait for game board to load - wait for actual cells to appear
     const cells = page.getByRole('gridcell');
+    await expect(cells.first()).toBeVisible({ timeout: 10000 });
+
+    // Verify cell count
     const cellCount = await cells.count();
     expect(cellCount).toBe(225); // 15x15
 
