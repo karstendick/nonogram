@@ -36,8 +36,8 @@ test.describe('Mobile Visual Tests', () => {
     });
 
     // Verify game elements are visible
-    await expect(page.getByRole('button', { name: 'Check' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Reset' })).toBeVisible();
+    const cells = page.getByRole('gridcell');
+    await expect(cells.first()).toBeVisible();
   });
 
   test('should show mobile mode toggle on small screens', async ({ page, isMobile }) => {
@@ -85,9 +85,9 @@ test.describe('Mobile Visual Tests', () => {
       fullPage: true,
     });
 
-    // Verify controls are visible
-    await expect(page.getByRole('button', { name: 'Check' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Reset' })).toBeVisible();
+    // Verify game grid is visible
+    const cells = page.getByRole('gridcell');
+    await expect(cells.first()).toBeVisible();
   });
 
   test('should verify responsive layout of puzzle generation tab', async ({ page }) => {
