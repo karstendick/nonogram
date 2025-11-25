@@ -63,6 +63,9 @@ export function Cell({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    // Prevent page scrolling and pull-to-refresh while dragging
+    e.preventDefault();
+
     // Find which cell the touch is over
     const touch = e.touches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -96,7 +99,7 @@ export function Cell({
     // 15x15 uses ~22px cells, smaller puzzles use 40px
     const mobileSizeClass = isLargePuzzle ? 'w-[22px] h-[22px]' : 'w-10 h-10';
 
-    const base = `${mobileSizeClass} sm:w-12 sm:h-12 border border-gray-400 relative flex items-center justify-center cursor-pointer transition-colors select-none`;
+    const base = `${mobileSizeClass} sm:w-12 sm:h-12 border border-gray-400 relative flex items-center justify-center cursor-pointer transition-colors select-none touch-none`;
 
     // Add thicker borders every 5 rows/columns for better readability (internal only, not edges)
     const gridLines = [];
