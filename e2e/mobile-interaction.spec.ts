@@ -49,20 +49,24 @@ test.describe('Mobile Interaction Tests', () => {
     await expect(cell).toBeVisible();
   });
 
-  test('should handle touch gestures on controls', async ({ page }) => {
-    // Test tapping various control buttons
-    const checkButton = page.getByRole('button', { name: 'Check' });
-    const clearButton = page.getByRole('button', { name: 'Reset' });
+  test('should handle touch gestures on controls', async ({ page, isMobile }) => {
+    if (!isMobile) {
+      test.skip();
+    }
+
+    // Test tapping mode toggle buttons
+    const fillButton = page.getByRole('button', { name: 'Fill mode' });
+    const markButton = page.getByRole('button', { name: 'Mark empty mode' });
 
     // Verify buttons are tappable
-    await expect(checkButton).toBeVisible();
-    await expect(clearButton).toBeVisible();
+    await expect(fillButton).toBeVisible();
+    await expect(markButton).toBeVisible();
 
-    // Tap the clear button
-    await clearButton.click();
+    // Tap the mark button
+    await markButton.click();
 
     // Button should still be visible after interaction
-    await expect(clearButton).toBeVisible();
+    await expect(markButton).toBeVisible();
   });
 
   test('should navigate back from game to puzzle selection', async ({ page }) => {
@@ -100,9 +104,11 @@ test.describe('Mobile Interaction Tests', () => {
     // Scroll to bottom of page
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 
-    // Verify we can see controls at the bottom
-    await expect(page.getByRole('button', { name: 'Check' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Reset' })).toBeVisible();
+    // Verify we can see mode toggle buttons at the bottom (mobile only)
+    if (isMobile) {
+      await expect(page.getByRole('button', { name: 'Fill mode' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Mark empty mode' })).toBeVisible();
+    }
 
     // Scroll back to top
     await page.evaluate(() => window.scrollTo(0, 0));

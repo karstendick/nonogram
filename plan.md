@@ -99,16 +99,16 @@ nonogram/
 - [ ] Component tests
 - [ ] Animations and transitions
 - [ ] Performance optimization
-- [ ] Puzzle completion recognition/celebration
+- [x] Puzzle completion recognition/celebration
   - Check playerGrid against cached solution (don't run solver on every move)
   - Display congratulations message/animation when puzzle is solved
-- [ ] Larger X marks for marked empty cells (should fill more of the cell)
-- [ ] Improve mobile mode toggle buttons
+- [x] Larger X marks for marked empty cells (should fill more of the cell)
+- [x] Improve mobile mode toggle buttons
   - Move Fill/Mark Empty buttons below the puzzle instead of above
   - Label buttons with visual icons (filled square for Fill, X for Mark Empty) instead of text labels
   - Eliminate excessive whitespace between puzzle and buttons
-- [ ] Click completed clue to auto-mark remaining cells as empty
-- [ ] Real-time mistake highlighting (red) to prevent wasted effort
+- [x] Click completed clue to auto-mark remaining cells as empty
+- [x] Real-time mistake highlighting (red) to prevent wasted effort
 
 ### Phase 7: Enhanced Puzzle Selection UI
 
