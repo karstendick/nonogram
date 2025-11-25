@@ -10,10 +10,46 @@ import { parsePuzzle } from './logic/puzzleParser';
 import puzzlesData from './data/puzzles.json';
 import type { PuzzleCollection, Puzzle } from './types';
 
+// Component to display and copy puzzle seed
+function SeedDisplay({ seed, className = '' }: { seed: string; className?: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleClick = () => {
+    navigator.clipboard
+      .writeText(seed)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch((err) => {
+        console.error('Failed to copy seed:', err);
+      });
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-mono bg-gray-100 hover:bg-gray-200 rounded transition-colors ${className}`}
+      title="Click to copy seed"
+    >
+      <span className="text-gray-600">Seed:</span>
+      <span className="font-semibold text-gray-800">{seed}</span>
+      {copied ? (
+        <span className="text-green-600 font-semibold">✓</span>
+      ) : (
+        <span className="text-gray-400">📋</span>
+      )}
+    </button>
+  );
+}
+
 function App() {
   const { currentPuzzle, loadPuzzle } = useGameStore();
   const [view, setView] = useState<'game' | 'select'>('select');
   const [tab, setTab] = useState<'premade' | 'generate'>('premade');
+
+  // Check if the current puzzle is generated (vs pre-made)
+  const isGeneratedPuzzle = currentPuzzle?.title.startsWith('Generated');
 
   // Load the first puzzle on mount
   useEffect(() => {
@@ -80,17 +116,24 @@ function App() {
       {/* Header - minimal on mobile, full on desktop */}
       <div className="w-full sm:text-center sm:mb-6">
         {/* Mobile header - compact */}
-        <div className="sm:hidden flex items-center justify-between px-2 py-2 bg-gray-50">
-          <button
-            onClick={() => setView('select')}
-            className="p-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-            aria-label="Back to puzzle selection"
-          >
-            ← Back
-          </button>
-          {currentPuzzle && (
-            <div className="text-xs text-gray-600">
-              {currentPuzzle.width} × {currentPuzzle.height}
+        <div className="sm:hidden px-2 py-2 bg-gray-50">
+          <div className="flex items-center justify-between mb-1">
+            <button
+              onClick={() => setView('select')}
+              className="p-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+              aria-label="Back to puzzle selection"
+            >
+              ← Back
+            </button>
+            {currentPuzzle && (
+              <div className="text-xs text-gray-600">
+                {currentPuzzle.width} × {currentPuzzle.height}
+              </div>
+            )}
+          </div>
+          {currentPuzzle && isGeneratedPuzzle && (
+            <div className="flex justify-center">
+              <SeedDisplay seed={currentPuzzle.id} />
             </div>
           )}
         </div>
@@ -99,15 +142,22 @@ function App() {
         <div className="hidden sm:block">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Nonogram Puzzle</h1>
           {currentPuzzle && (
-            <div className="text-sm sm:text-base text-gray-600">
-              <span className="font-semibold">{currentPuzzle.title}</span>
-              <span className="mx-2">•</span>
-              <span className="capitalize">{currentPuzzle.difficulty}</span>
-              <span className="mx-2">•</span>
-              <span>
-                {currentPuzzle.width} × {currentPuzzle.height}
-              </span>
-            </div>
+            <>
+              <div className="text-sm sm:text-base text-gray-600">
+                <span className="font-semibold">{currentPuzzle.title}</span>
+                <span className="mx-2">•</span>
+                <span className="capitalize">{currentPuzzle.difficulty}</span>
+                <span className="mx-2">•</span>
+                <span>
+                  {currentPuzzle.width} × {currentPuzzle.height}
+                </span>
+              </div>
+              {isGeneratedPuzzle && (
+                <div className="mt-2 flex justify-center">
+                  <SeedDisplay seed={currentPuzzle.id} />
+                </div>
+              )}
+            </>
           )}
           <button
             onClick={() => setView('select')}
