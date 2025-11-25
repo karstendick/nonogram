@@ -1,13 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { GameBoard } from './components/GameBoard';
 import { ModeToggle } from './components/ModeToggle';
 import { CompletionModal } from './components/CompletionModal';
+import { LandingPage } from './components/LandingPage';
 import { PuzzleSelector } from './components/PuzzleSelector';
 import { PuzzleGenerator } from './components/PuzzleGenerator';
 import { useGameStore } from './store/gameStore';
-import { parsePuzzle } from './logic/puzzleParser';
-import puzzlesData from './data/puzzles.json';
-import type { PuzzleCollection, Puzzle } from './types';
+import type { Puzzle } from './types';
 
 // Component to display and copy puzzle seed
 function SeedDisplay({ seed, className = '' }: { seed: string; className?: string }) {
@@ -44,71 +43,77 @@ function SeedDisplay({ seed, className = '' }: { seed: string; className?: strin
 
 function App() {
   const { currentPuzzle, loadPuzzle } = useGameStore();
-  const [view, setView] = useState<'game' | 'select'>('select');
-  const [tab, setTab] = useState<'premade' | 'generate'>('premade');
+  const [view, setView] = useState<'landing' | 'enterSeed' | 'premade' | 'game'>('landing');
 
   // Check if the current puzzle is generated (vs pre-made)
   const isGeneratedPuzzle = currentPuzzle?.title.startsWith('Generated');
-
-  // Load the first puzzle on mount
-  useEffect(() => {
-    const data = puzzlesData as PuzzleCollection;
-    const firstPuzzleData = data.puzzles[0];
-    if (firstPuzzleData) {
-      const puzzle = parsePuzzle(firstPuzzleData);
-      loadPuzzle(puzzle);
-    }
-  }, [loadPuzzle]);
 
   const handlePuzzleSelected = (puzzle: Puzzle) => {
     loadPuzzle(puzzle);
     setView('game');
   };
 
-  if (view === 'select') {
+  const handleBackToLanding = () => {
+    setView('landing');
+  };
+
+  // Landing page
+  if (view === 'landing') {
+    return (
+      <LandingPage
+        onPuzzleSelected={handlePuzzleSelected}
+        onNavigateToSeedEntry={() => setView('enterSeed')}
+        onNavigateToPremade={() => setView('premade')}
+      />
+    );
+  }
+
+  // Enter Seed page
+  if (view === 'enterSeed') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center p-4 sm:p-8">
         <div className="text-center mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Nonogram Puzzle</h1>
-          <p className="text-gray-600">Select or generate a puzzle to play</p>
+          <p className="text-gray-600">Generate a puzzle from a seed</p>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setTab('premade')}
-            className={`px-6 py-2 rounded-md font-semibold transition-colors ${
-              tab === 'premade'
-                ? 'bg-purple-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            Pre-made Puzzles
-          </button>
-          <button
-            onClick={() => setTab('generate')}
-            className={`px-6 py-2 rounded-md font-semibold transition-colors ${
-              tab === 'generate'
-                ? 'bg-purple-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            Generate Puzzle
-          </button>
-        </div>
+        <button
+          onClick={handleBackToLanding}
+          className="mb-6 px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
+        >
+          ← Back to Home
+        </button>
 
-        {/* Content */}
-        {tab === 'premade' ? (
-          <PuzzleSelector
-            onPuzzleSelected={handlePuzzleSelected}
-            currentPuzzleId={currentPuzzle?.id}
-          />
-        ) : (
-          <PuzzleGenerator onPuzzleGenerated={handlePuzzleSelected} />
-        )}
+        <PuzzleGenerator onPuzzleGenerated={handlePuzzleSelected} />
       </div>
     );
   }
+
+  // Pre-made puzzles page
+  if (view === 'premade') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center p-4 sm:p-8">
+        <div className="text-center mb-6">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Nonogram Puzzle</h1>
+          <p className="text-gray-600">Select a puzzle to play</p>
+        </div>
+
+        <button
+          onClick={handleBackToLanding}
+          className="mb-6 px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
+        >
+          ← Back to Home
+        </button>
+
+        <PuzzleSelector
+          onPuzzleSelected={handlePuzzleSelected}
+          currentPuzzleId={currentPuzzle?.id}
+        />
+      </div>
+    );
+  }
+
+  // Game page
 
   return (
     <div className="min-h-screen bg-white sm:bg-gradient-to-br sm:from-blue-50 sm:to-indigo-100 flex flex-col items-center sm:p-8">
@@ -118,9 +123,9 @@ function App() {
         <div className="sm:hidden px-2 py-2 bg-gray-50">
           <div className="flex items-center justify-between mb-1">
             <button
-              onClick={() => setView('select')}
+              onClick={handleBackToLanding}
               className="p-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-              aria-label="Back to puzzle selection"
+              aria-label="Back to home"
             >
               ← Back
             </button>
@@ -159,10 +164,10 @@ function App() {
             </>
           )}
           <button
-            onClick={() => setView('select')}
+            onClick={handleBackToLanding}
             className="mt-4 px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
           >
-            ← Back to Puzzle Selection
+            ← Back to Home
           </button>
         </div>
       </div>
@@ -212,7 +217,7 @@ function App() {
       </div>
 
       {/* Completion Modal */}
-      <CompletionModal onBackToSelection={() => setView('select')} />
+      <CompletionModal onBackToSelection={handleBackToLanding} />
     </div>
   );
 }

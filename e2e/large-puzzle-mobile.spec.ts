@@ -7,6 +7,10 @@ test.describe('Large Puzzle Mobile Tests', () => {
   }) => {
     await page.goto('/');
 
+    // Navigate to pre-made puzzles
+    const premadeButton = page.getByText('Pre-made Puzzles').locator('..');
+    await premadeButton.click();
+
     // Navigate to Generate Puzzle tab
     await page.getByRole('button', { name: 'Generate Puzzle' }).click();
 
@@ -16,7 +20,7 @@ test.describe('Large Puzzle Mobile Tests', () => {
     await page.getByRole('button', { name: 'Generate Puzzle' }).last().click();
 
     // Wait for game board to load
-    await expect(page.getByRole('button', { name: /Back to Puzzle Selection/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Back to Home/i })).toBeVisible();
 
     // Take screenshot
     if (isMobile) {

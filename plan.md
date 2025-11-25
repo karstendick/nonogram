@@ -127,7 +127,7 @@ nonogram/
 - [ ] Statistics tracking (completion time, moves)
 - [ ] Haptic feedback (mobile)
 - [ ] Dark mode
-- [ ] Drag interaction (fill/mark multiple cells)
+- [x] Drag interaction (fill/mark multiple cells)
   - Constrained to single array
   - Desktop: drag follows mouse button
   - Mobile: drag applies current mode

@@ -4,13 +4,17 @@ test.describe('Mobile Touch Bug', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
 
+    // Navigate to pre-made puzzles
+    const premadeButton = page.getByText('Pre-made Puzzles').locator('..');
+    await premadeButton.click();
+
     // Navigate to game view
     await expect(page.getByRole('heading', { name: 'Pre-made Puzzles' })).toBeVisible();
     const firstPuzzle = page.getByRole('button').filter({ hasText: /×/ }).first();
     await firstPuzzle.click();
 
     // Wait for game to load
-    await expect(page.getByRole('button', { name: /Back to Puzzle Selection/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Back to Home/i })).toBeVisible();
   });
 
   test('single tap should fill cell without immediate unfill', async ({ page, isMobile }) => {

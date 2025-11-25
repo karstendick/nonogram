@@ -21,13 +21,17 @@ test.describe('Mobile Visual Tests', () => {
   test('should display game board properly on mobile', async ({ page }) => {
     await page.goto('/');
 
+    // Navigate to pre-made puzzles
+    const premadeButton = page.getByText('Pre-made Puzzles').locator('..');
+    await premadeButton.click();
+
     // Select the first puzzle
     await expect(page.getByRole('heading', { name: 'Pre-made Puzzles' })).toBeVisible();
     const firstPuzzle = page.getByRole('button').filter({ hasText: /×/ }).first();
     await firstPuzzle.click();
 
     // Wait for game board to load
-    await expect(page.getByRole('button', { name: /Back to Puzzle Selection/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Back to Home/i })).toBeVisible();
 
     // Take a screenshot of the game board
     await page.screenshot({
@@ -43,13 +47,17 @@ test.describe('Mobile Visual Tests', () => {
   test('should show mobile mode toggle on small screens', async ({ page, isMobile }) => {
     await page.goto('/');
 
+    // Navigate to pre-made puzzles
+    const premadeButton = page.getByText('Pre-made Puzzles').locator('..');
+    await premadeButton.click();
+
     // Navigate to game
     await expect(page.getByRole('heading', { name: 'Pre-made Puzzles' })).toBeVisible();
     const firstPuzzle = page.getByRole('button').filter({ hasText: /×/ }).first();
     await firstPuzzle.click();
 
     // Wait for game to load
-    await expect(page.getByRole('button', { name: /Back to Puzzle Selection/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Back to Home/i })).toBeVisible();
 
     // Check if mobile mode toggle exists based on viewport
     const fillButton = page.getByRole('button', { name: 'Fill' });
@@ -70,6 +78,10 @@ test.describe('Mobile Visual Tests', () => {
 
   test('should check layout of full game view', async ({ page }) => {
     await page.goto('/');
+
+    // Navigate to pre-made puzzles
+    const premadeButton = page.getByText('Pre-made Puzzles').locator('..');
+    await premadeButton.click();
 
     // Navigate to game
     await expect(page.getByRole('heading', { name: 'Pre-made Puzzles' })).toBeVisible();
