@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/nonogram/preview/feature-drag/sw.js', { scope: '/nonogram/preview/feature-drag/' })})}
