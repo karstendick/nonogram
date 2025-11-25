@@ -50,7 +50,7 @@ export function Cell({
     // 15x15 uses ~22px cells, smaller puzzles use 40px
     const mobileSizeClass = isLargePuzzle ? 'w-[22px] h-[22px]' : 'w-10 h-10';
 
-    const base = `${mobileSizeClass} sm:w-12 sm:h-12 border border-gray-400 flex items-center justify-center cursor-pointer transition-colors select-none`;
+    const base = `${mobileSizeClass} sm:w-12 sm:h-12 border border-gray-400 relative flex items-center justify-center cursor-pointer transition-colors select-none`;
 
     // Add thicker borders every 5 rows/columns for better readability (internal only, not edges)
     const gridLines = [];
@@ -94,9 +94,15 @@ export function Cell({
     >
       {state === CellState.MarkedEmpty && (
         <span
-          className={`font-bold ${isLargePuzzle ? 'text-lg sm:text-4xl' : 'text-3xl sm:text-4xl'} ${
-            isMistake ? 'text-red-600' : 'text-gray-400'
-          }`}
+          className={`font-thin absolute ${
+            isLargePuzzle ? 'text-[21px] sm:text-[46px]' : 'text-[38px] sm:text-[46px]'
+          } ${isMistake ? 'text-red-600' : 'text-gray-800'}`}
+          style={{
+            top: '54%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            lineHeight: 1,
+          }}
         >
           ×
         </span>
