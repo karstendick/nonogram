@@ -4,13 +4,17 @@ test.describe('Mobile Interaction Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
 
+    // Navigate to pre-made puzzles
+    const premadeButton = page.getByText('Pre-made Puzzles').locator('..');
+    await premadeButton.click();
+
     // Navigate to game view
     await expect(page.getByRole('heading', { name: 'Pre-made Puzzles' })).toBeVisible();
     const firstPuzzle = page.getByRole('button').filter({ hasText: /×/ }).first();
     await firstPuzzle.click();
 
     // Wait for game to load
-    await expect(page.getByRole('button', { name: /Back to Puzzle Selection/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Back to Home/i })).toBeVisible();
   });
 
   test('should toggle between fill and mark modes on mobile', async ({ page, isMobile }) => {
@@ -69,35 +73,36 @@ test.describe('Mobile Interaction Tests', () => {
     await expect(markButton).toBeVisible();
   });
 
-  test('should navigate back from game to puzzle selection', async ({ page }) => {
-    const backButton = page.getByRole('button', { name: /Back to Puzzle Selection/i });
+  test('should navigate back from game to home', async ({ page }) => {
+    const backButton = page.getByRole('button', { name: /Back to Home/i });
     await backButton.click();
 
-    // Verify we're back at puzzle selection
-    await expect(page.getByRole('heading', { name: 'Nonogram Puzzle' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Pre-made Puzzles' })).toBeVisible();
+    // Verify we're back at the landing page
+    await expect(page.getByRole('heading', { name: /Nonogram Puzzle/i })).toBeVisible();
+    await expect(page.getByText('Quick Play')).toBeVisible();
+    await expect(page.getByText('Enter a Seed')).toBeVisible();
+    await expect(page.getByText('Pre-made Puzzles')).toBeVisible();
   });
 
-  test('should handle tab switching on mobile', async ({ page }) => {
-    // Navigate back to selection screen
-    const backButton = page.getByRole('button', { name: /Back to Puzzle Selection/i });
+  test('should navigate between pages on mobile', async ({ page }) => {
+    // Navigate back to landing
+    const backButton = page.getByRole('button', { name: /Back to Home/i });
     await backButton.click();
 
-    // Click on Generate Puzzle tab
-    const generateTab = page.getByRole('button', { name: 'Generate Puzzle' });
-    await generateTab.click();
+    // Click on Enter a Seed
+    const seedButton = page.getByText('Enter a Seed').locator('..');
+    await seedButton.click();
 
-    // Verify tab switched
+    // Verify we're on seed entry page
     await expect(page.locator('text=Size')).toBeVisible();
     await expect(page.getByLabel('Seed')).toBeVisible();
 
-    // Switch back to Pre-made Puzzles
-    const premadeTab = page.getByRole('button', { name: 'Pre-made Puzzles' });
-    await premadeTab.click();
+    // Go back to home
+    const backToHomeButton = page.getByRole('button', { name: /Back to Home/i });
+    await backToHomeButton.click();
 
-    // Verify we're back on the premade tab
-    const puzzleCards = page.getByRole('button').filter({ hasText: /×/ });
-    await expect(puzzleCards.first()).toBeVisible();
+    // Verify we're back on landing page
+    await expect(page.getByText('Quick Play')).toBeVisible();
   });
 
   test('should scroll content properly on mobile', async ({ page, isMobile }) => {

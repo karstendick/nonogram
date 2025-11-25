@@ -4,16 +4,17 @@ test.describe('Clue Visibility Tests', () => {
   test('all column and row clues should be fully visible', async ({ page }) => {
     await page.goto('/');
 
-    // Navigate to Generate Puzzle tab to create a 15x15 with many clues
-    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
+    // Navigate to Enter a Seed page
+    const seedButton = page.getByText('Enter a Seed').locator('..');
+    await seedButton.click();
 
     // Generate a 15x15 puzzle
     await page.getByLabel('Seed').fill('test-clue-visibility');
     await page.getByLabel('15×15').check();
-    await page.getByRole('button', { name: 'Generate Puzzle' }).last().click();
+    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
 
     // Wait for game board to load
-    await expect(page.getByRole('button', { name: /Back to Puzzle Selection/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Back to Home/i })).toBeVisible();
 
     // Wait for grid cells to be present
     await expect(page.getByRole('gridcell').first()).toBeVisible();
@@ -63,13 +64,16 @@ test.describe('Clue Visibility Tests', () => {
 
     await page.goto('/');
 
+    // Navigate to Enter a Seed page
+    const seedButton = page.getByText('Enter a Seed').locator('..');
+    await seedButton.click();
+
     // Navigate to a larger puzzle that has tall column clues
-    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
     await page.getByLabel('Seed').fill('test-tall-clues');
     await page.getByLabel('15×15').check();
-    await page.getByRole('button', { name: 'Generate Puzzle' }).last().click();
+    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
 
-    await expect(page.getByRole('button', { name: /Back to Puzzle Selection/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Back to Home/i })).toBeVisible();
 
     // Wait for grid cells to be present
     await expect(page.getByRole('gridcell').first()).toBeVisible();
@@ -110,14 +114,17 @@ test.describe('Clue Visibility Tests', () => {
   test('extremely long clues should be fully visible', async ({ page }) => {
     await page.goto('/');
 
+    // Navigate to Enter a Seed page
+    const seedButton = page.getByText('Enter a Seed').locator('..');
+    await seedButton.click();
+
     // Try multiple seeds to find one with very long clues (alternating pattern)
     // Alternating filled/empty creates the longest clues: "1 1 1 1 1 1 1"
-    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
     await page.getByLabel('Seed').fill('test-long-clues-12345');
     await page.getByLabel('15×15').check();
-    await page.getByRole('button', { name: 'Generate Puzzle' }).last().click();
+    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
 
-    await expect(page.getByRole('button', { name: /Back to Puzzle Selection/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Back to Home/i })).toBeVisible();
 
     // Wait for grid cells to be present
     await expect(page.getByRole('gridcell').first()).toBeVisible();
@@ -151,13 +158,16 @@ test.describe('Clue Visibility Tests', () => {
   test('row clues should not be cut off on the left', async ({ page }) => {
     await page.goto('/');
 
+    // Navigate to Enter a Seed page
+    const seedButton = page.getByText('Enter a Seed').locator('..');
+    await seedButton.click();
+
     // Generate a 15x15 puzzle
-    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
     await page.getByLabel('Seed').fill('test-row-clues');
     await page.getByLabel('15×15').check();
-    await page.getByRole('button', { name: 'Generate Puzzle' }).last().click();
+    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
 
-    await expect(page.getByRole('button', { name: /Back to Puzzle Selection/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Back to Home/i })).toBeVisible();
 
     // Wait for grid cells to be present
     await expect(page.getByRole('gridcell').first()).toBeVisible();

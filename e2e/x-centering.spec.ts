@@ -4,6 +4,10 @@ test.describe('X Mark Centering', () => {
   test('X marks should be visually centered in cells', async ({ page }) => {
     await page.goto('/');
 
+    // Navigate to pre-made puzzles
+    const premadeButton = page.getByText('Pre-made Puzzles').locator('..');
+    await premadeButton.click();
+
     // Select a small puzzle for easier inspection
     await page.getByText('Heart').first().click();
 
