@@ -114,16 +114,24 @@ nonogram/
 
 ## Planned Features
 
-### Phase 8: Additional Enhancements
+### Phase 8: Enhanced User Experience
 
-- [ ] Auto-save progress to localStorage
-- [ ] Haptic feedback (mobile)
-- [ ] Animations and transitions
-- [ ] Component tests
-- [ ] Performance optimization
+- [ ] Puzzle sharing via URL
+  - Encode puzzle state in URL parameters
+  - "Share this puzzle" button generates shareable link
+  - Allows sharing specific puzzles with friends
+- [ ] Difficulty filter for random generation
+  - Add difficulty selector (Easy/Medium/Hard) to Quick Play
+  - Keep generating with random seeds until target difficulty is met
+  - Better UX than trial-and-error with manual seeds
+- [ ] Tutorial / How to Play
+  - Interactive tutorial explaining nonogram rules
+  - Simple example puzzle (3×3 or 5×5)
+  - Explain clues, marking empties, and basic solving strategies
 
 ### Phase 9: PWA Support
 
+- [ ] Auto-save progress to localStorage
 - [ ] Design custom app icons (favicon, PWA icons)
 - [ ] Configure PWA manifest
 - [ ] Service worker for offline support
