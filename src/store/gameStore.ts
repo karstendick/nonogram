@@ -9,12 +9,25 @@ interface GameStore {
   moves: number;
   isComplete: boolean;
 
+  // Drag state
+  isDragging: boolean;
+  dragStartRow: number | null;
+  dragStartCol: number | null;
+  dragAction: CellState | null;
+  dragAxis: 'row' | 'column' | null;
+  draggedCells: Set<string>;
+
   // Actions
   loadPuzzle: (puzzle: Puzzle) => void;
   setCellState: (row: number, col: number, state: CellState) => void;
   markMultipleCells: (cells: Array<{ row: number; col: number; state: CellState }>) => void;
   setMode: (mode: InteractionMode) => void;
   checkSolution: () => boolean;
+
+  // Drag actions
+  startDrag: (row: number, col: number, action: CellState) => void;
+  continueDrag: (row: number, col: number) => void;
+  endDrag: () => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -24,6 +37,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   currentMode: InteractionMode.Fill,
   moves: 0,
   isComplete: false,
+
+  // Drag state
+  isDragging: false,
+  dragStartRow: null,
+  dragStartCol: null,
+  dragAction: null,
+  dragAxis: null,
+  draggedCells: new Set<string>(),
 
   // Load a new puzzle
   loadPuzzle: (puzzle: Puzzle) => {
@@ -36,6 +57,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       playerGrid: emptyGrid,
       moves: 0,
       isComplete: false,
+      // Reset drag state when loading a new puzzle
+      isDragging: false,
+      dragStartRow: null,
+      dragStartCol: null,
+      dragAction: null,
+      dragAxis: null,
+      draggedCells: new Set<string>(),
     });
   },
 
@@ -112,5 +140,146 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     set({ isComplete: isCorrect });
     return isCorrect;
+  },
+
+  // Start a drag operation
+  startDrag: (row: number, col: number, action: CellState) => {
+    const { playerGrid, currentPuzzle } = get();
+    if (!currentPuzzle) return;
+
+    // Check if we can apply this action to the starting cell
+    const currentState = playerGrid[row][col];
+
+    // Respect cell state constraints
+    if (action === CellState.Filled && currentState === CellState.MarkedEmpty) {
+      return; // Cannot fill a marked empty cell
+    }
+    if (action === CellState.MarkedEmpty && currentState === CellState.Filled) {
+      return; // Cannot mark empty a filled cell
+    }
+
+    // Create new grid with the starting cell updated
+    const newGrid = playerGrid.map((r, i) =>
+      i === row ? r.map((c, j) => (j === col ? action : c)) : [...r]
+    );
+
+    // Initialize drag state
+    const draggedCells = new Set<string>();
+    draggedCells.add(`${row},${col}`);
+
+    set({
+      playerGrid: newGrid,
+      isDragging: true,
+      dragStartRow: row,
+      dragStartCol: col,
+      dragAction: action,
+      dragAxis: null, // Will be determined on first move
+      draggedCells,
+    });
+  },
+
+  // Continue dragging to a new cell
+  continueDrag: (row: number, col: number) => {
+    const {
+      isDragging,
+      dragStartRow,
+      dragStartCol,
+      dragAction,
+      dragAxis,
+      draggedCells,
+      playerGrid,
+      currentPuzzle,
+    } = get();
+
+    if (
+      !isDragging ||
+      dragStartRow === null ||
+      dragStartCol === null ||
+      dragAction === null ||
+      !currentPuzzle
+    ) {
+      return;
+    }
+
+    // Check if this cell has already been dragged over
+    const cellKey = `${row},${col}`;
+    if (draggedCells.has(cellKey)) {
+      return; // Don't apply action twice
+    }
+
+    // Determine or verify the drag axis
+    let newAxis = dragAxis;
+
+    if (dragAxis === null) {
+      // First move after start - determine the axis
+      if (row === dragStartRow && col !== dragStartCol) {
+        newAxis = 'row';
+      } else if (col === dragStartCol && row !== dragStartRow) {
+        newAxis = 'column';
+      } else if (row === dragStartRow && col === dragStartCol) {
+        // Same cell as start, no axis determined yet
+        return;
+      } else {
+        // Diagonal move - not allowed
+        return;
+      }
+    } else {
+      // Verify the move is along the locked axis
+      if (newAxis === 'row' && row !== dragStartRow) {
+        return; // Not on the same row
+      }
+      if (newAxis === 'column' && col !== dragStartCol) {
+        return; // Not on the same column
+      }
+    }
+
+    // Check if we can apply the action to this cell
+    const currentState = playerGrid[row][col];
+
+    // Respect cell state constraints
+    if (dragAction === CellState.Filled && currentState === CellState.MarkedEmpty) {
+      return; // Cannot fill a marked empty cell
+    }
+    if (dragAction === CellState.MarkedEmpty && currentState === CellState.Filled) {
+      return; // Cannot mark empty a filled cell
+    }
+
+    // Apply the action to this cell
+    const newGrid = playerGrid.map((r, i) =>
+      i === row ? r.map((c, j) => (j === col ? dragAction : c)) : [...r]
+    );
+
+    // Add this cell to the dragged cells set
+    const newDraggedCells = new Set(draggedCells);
+    newDraggedCells.add(cellKey);
+
+    set({
+      playerGrid: newGrid,
+      dragAxis: newAxis,
+      draggedCells: newDraggedCells,
+    });
+  },
+
+  // End the drag operation
+  endDrag: () => {
+    const { isDragging } = get();
+
+    if (!isDragging) {
+      return;
+    }
+
+    // Increment moves count for the entire drag operation
+    set({
+      isDragging: false,
+      dragStartRow: null,
+      dragStartCol: null,
+      dragAction: null,
+      dragAxis: null,
+      draggedCells: new Set<string>(),
+      moves: get().moves + 1,
+    });
+
+    // Check solution after drag completes
+    get().checkSolution();
   },
 }));

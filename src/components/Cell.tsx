@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { CellState } from '../types';
 
 interface CellProps {
@@ -8,6 +9,8 @@ interface CellProps {
   gridHeight: number;
   solutionValue: boolean;
   onCellClick: (row: number, col: number, isRightClick: boolean) => void;
+  onCellDragStart: (row: number, col: number, isRightClick: boolean) => void;
+  onCellDragEnter: (row: number, col: number) => void;
 }
 
 export function Cell({
@@ -18,20 +21,66 @@ export function Cell({
   gridHeight,
   solutionValue,
   onCellClick,
+  onCellDragStart,
+  onCellDragEnter,
 }: CellProps) {
-  const handleClick = (e: React.MouseEvent) => {
+  // Track if we recently handled a touch event to prevent mouse event double-firing
+  const touchHandledRef = useRef(false);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Ignore mouse events if we just handled a touch event
+    if (touchHandledRef.current) {
+      return;
+    }
     e.preventDefault();
-    onCellClick(row, col, false);
+    // Start drag on mouse down (this handles both clicks and drags)
+    onCellDragStart(row, col, e.button === 2); // button 2 = right click
   };
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    onCellClick(row, col, true);
+    // Prevent the context menu from appearing, but drag start already handled it
+  };
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    // Continue drag when mouse enters this cell
+    if (e.buttons > 0) {
+      // Only if mouse button is pressed
+      onCellDragEnter(row, col);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    // Set flag to prevent mouse events from firing
+    touchHandledRef.current = true;
+    // Reset flag after a short delay (mouse events fire ~300ms after touch on some browsers)
+    setTimeout(() => {
+      touchHandledRef.current = false;
+    }, 500);
+    // Start drag on touch
+    onCellDragStart(row, col, false);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // Prevent page scrolling and pull-to-refresh while dragging
+    e.preventDefault();
+
+    // Find which cell the touch is over
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+    if (element && element.getAttribute('role') === 'gridcell') {
+      const cellRow = parseInt(element.getAttribute('data-row') || '0');
+      const cellCol = parseInt(element.getAttribute('data-col') || '0');
+      onCellDragEnter(cellRow, cellCol);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
+      // Use click handler for keyboard accessibility
       onCellClick(row, col, false);
     }
   };
@@ -50,7 +99,7 @@ export function Cell({
     // 15x15 uses ~22px cells, smaller puzzles use 40px
     const mobileSizeClass = isLargePuzzle ? 'w-[22px] h-[22px]' : 'w-10 h-10';
 
-    const base = `${mobileSizeClass} sm:w-12 sm:h-12 border border-gray-400 relative flex items-center justify-center cursor-pointer transition-colors select-none`;
+    const base = `${mobileSizeClass} sm:w-12 sm:h-12 border border-gray-400 relative flex items-center justify-center cursor-pointer transition-colors select-none touch-none`;
 
     // Add thicker borders every 5 rows/columns for better readability (internal only, not edges)
     const gridLines = [];
@@ -87,9 +136,14 @@ export function Cell({
       role="gridcell"
       tabIndex={-1}
       className={getCellClasses()}
-      onClick={handleClick}
       onContextMenu={handleContextMenu}
+      onMouseDown={handleMouseDown}
+      onMouseEnter={handleMouseEnter}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
       onKeyDown={handleKeyDown}
+      data-row={row}
+      data-col={col}
       aria-label={`Cell ${row + 1}, ${col + 1}`}
     >
       {state === CellState.MarkedEmpty && (
