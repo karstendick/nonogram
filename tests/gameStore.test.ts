@@ -153,4 +153,271 @@ describe('GameStore', () => {
       expect(result).toBe(true);
     });
   });
+
+  describe('drag interaction', () => {
+    describe('startDrag', () => {
+      it('should start a drag on a cell with fill action', () => {
+        const store = useGameStore.getState();
+
+        store.startDrag(0, 0, CellState.Filled);
+
+        const { isDragging, dragStartRow, dragStartCol, dragAction } = useGameStore.getState();
+        expect(isDragging).toBe(true);
+        expect(dragStartRow).toBe(0);
+        expect(dragStartCol).toBe(0);
+        expect(dragAction).toBe(CellState.Filled);
+      });
+
+      it('should start a drag on a cell with mark empty action', () => {
+        const store = useGameStore.getState();
+
+        store.startDrag(1, 2, CellState.MarkedEmpty);
+
+        const { isDragging, dragStartRow, dragStartCol, dragAction } = useGameStore.getState();
+        expect(isDragging).toBe(true);
+        expect(dragStartRow).toBe(1);
+        expect(dragStartCol).toBe(2);
+        expect(dragAction).toBe(CellState.MarkedEmpty);
+      });
+
+      it('should apply the action to the starting cell', () => {
+        const store = useGameStore.getState();
+
+        store.startDrag(0, 0, CellState.Filled);
+
+        const { playerGrid } = useGameStore.getState();
+        expect(playerGrid[0][0]).toBe(CellState.Filled);
+      });
+    });
+
+    describe('continueDrag', () => {
+      it('should apply drag action to cells in the same row', () => {
+        const store = useGameStore.getState();
+
+        // Start drag at (0, 0)
+        store.startDrag(0, 0, CellState.Filled);
+
+        // Continue drag to (0, 1) and (0, 2) - same row
+        store.continueDrag(0, 1);
+        store.continueDrag(0, 2);
+
+        const { playerGrid } = useGameStore.getState();
+        expect(playerGrid[0][0]).toBe(CellState.Filled);
+        expect(playerGrid[0][1]).toBe(CellState.Filled);
+        expect(playerGrid[0][2]).toBe(CellState.Filled);
+      });
+
+      it('should apply drag action to cells in the same column', () => {
+        const store = useGameStore.getState();
+
+        // Start drag at (0, 0)
+        store.startDrag(0, 0, CellState.Filled);
+
+        // Continue drag to (1, 0) and (2, 0) - same column
+        store.continueDrag(1, 0);
+        store.continueDrag(2, 0);
+
+        const { playerGrid } = useGameStore.getState();
+        expect(playerGrid[0][0]).toBe(CellState.Filled);
+        expect(playerGrid[1][0]).toBe(CellState.Filled);
+        expect(playerGrid[2][0]).toBe(CellState.Filled);
+      });
+
+      it('should not apply drag to a cell in a different row and column', () => {
+        const store = useGameStore.getState();
+
+        // Start drag at (0, 0)
+        store.startDrag(0, 0, CellState.Filled);
+
+        // Try to drag to (1, 1) - different row AND column
+        store.continueDrag(1, 1);
+
+        const { playerGrid } = useGameStore.getState();
+        expect(playerGrid[0][0]).toBe(CellState.Filled);
+        expect(playerGrid[1][1]).toBe(CellState.Empty); // Should not be filled
+      });
+
+      it('should lock to row axis when first drag move is horizontal', () => {
+        const store = useGameStore.getState();
+
+        // Start drag at (0, 0)
+        store.startDrag(0, 0, CellState.Filled);
+
+        // First move is horizontal (to 0, 1)
+        store.continueDrag(0, 1);
+
+        // Try to move vertically (to 1, 1)
+        store.continueDrag(1, 1);
+
+        const { playerGrid } = useGameStore.getState();
+        expect(playerGrid[0][0]).toBe(CellState.Filled);
+        expect(playerGrid[0][1]).toBe(CellState.Filled);
+        expect(playerGrid[1][1]).toBe(CellState.Empty); // Should be rejected
+      });
+
+      it('should lock to column axis when first drag move is vertical', () => {
+        const store = useGameStore.getState();
+
+        // Start drag at (0, 0)
+        store.startDrag(0, 0, CellState.Filled);
+
+        // First move is vertical (to 1, 0)
+        store.continueDrag(1, 0);
+
+        // Try to move horizontally (to 1, 1)
+        store.continueDrag(1, 1);
+
+        const { playerGrid } = useGameStore.getState();
+        expect(playerGrid[0][0]).toBe(CellState.Filled);
+        expect(playerGrid[1][0]).toBe(CellState.Filled);
+        expect(playerGrid[1][1]).toBe(CellState.Empty); // Should be rejected
+      });
+
+      it('should not mark a cell twice during the same drag', () => {
+        const store = useGameStore.getState();
+
+        // Start drag at (0, 0)
+        store.startDrag(0, 0, CellState.Filled);
+
+        // Continue to (0, 1)
+        store.continueDrag(0, 1);
+        expect(useGameStore.getState().playerGrid[0][1]).toBe(CellState.Filled);
+
+        // Go back to (0, 0) - should not toggle it back to empty
+        store.continueDrag(0, 0);
+        expect(useGameStore.getState().playerGrid[0][0]).toBe(CellState.Filled);
+      });
+
+      it('should respect cell state constraints - cannot fill a MarkedEmpty cell', () => {
+        const store = useGameStore.getState();
+
+        // Mark (0, 1) as empty first
+        store.setCellState(0, 1, CellState.MarkedEmpty);
+
+        // Start drag at (0, 0) with Fill action
+        store.startDrag(0, 0, CellState.Filled);
+
+        // Try to drag to (0, 1) which is marked empty
+        store.continueDrag(0, 1);
+
+        const { playerGrid } = useGameStore.getState();
+        expect(playerGrid[0][1]).toBe(CellState.MarkedEmpty); // Should remain marked empty
+      });
+
+      it('should respect cell state constraints - cannot mark empty a Filled cell', () => {
+        const store = useGameStore.getState();
+
+        // Fill (0, 1) first
+        store.setCellState(0, 1, CellState.Filled);
+
+        // Start drag at (0, 0) with MarkEmpty action
+        store.startDrag(0, 0, CellState.MarkedEmpty);
+
+        // Try to drag to (0, 1) which is filled
+        store.continueDrag(0, 1);
+
+        const { playerGrid } = useGameStore.getState();
+        expect(playerGrid[0][1]).toBe(CellState.Filled); // Should remain filled
+      });
+
+      it('should clear filled cells when dragging from a filled cell', () => {
+        const store = useGameStore.getState();
+
+        // Fill multiple cells first
+        store.setCellState(0, 0, CellState.Filled);
+        store.setCellState(0, 1, CellState.Filled);
+        store.setCellState(0, 2, CellState.Filled);
+
+        // Verify cells are filled
+        expect(useGameStore.getState().playerGrid[0][0]).toBe(CellState.Filled);
+        expect(useGameStore.getState().playerGrid[0][1]).toBe(CellState.Filled);
+
+        // Start drag on filled cell (0, 0) with Empty action
+        store.startDrag(0, 0, CellState.Empty);
+
+        // Check drag state is set correctly
+        const stateAfterStart = useGameStore.getState();
+        expect(stateAfterStart.isDragging).toBe(true);
+        expect(stateAfterStart.dragAction).toBe(CellState.Empty);
+        expect(stateAfterStart.playerGrid[0][0]).toBe(CellState.Empty);
+
+        // Drag to clear other filled cells
+        store.continueDrag(0, 1);
+        store.continueDrag(0, 2);
+
+        const { playerGrid } = useGameStore.getState();
+        expect(playerGrid[0][0]).toBe(CellState.Empty);
+        expect(playerGrid[0][1]).toBe(CellState.Empty);
+        expect(playerGrid[0][2]).toBe(CellState.Empty);
+      });
+
+      it('should clear marked empty cells when dragging from a marked empty cell', () => {
+        const store = useGameStore.getState();
+
+        // Mark multiple cells empty first
+        store.setCellState(0, 0, CellState.MarkedEmpty);
+        store.setCellState(0, 1, CellState.MarkedEmpty);
+        store.setCellState(0, 2, CellState.MarkedEmpty);
+
+        // Start drag on marked empty cell (0, 0) with Empty action
+        store.startDrag(0, 0, CellState.Empty);
+
+        // Drag to clear other marked cells
+        store.continueDrag(0, 1);
+        store.continueDrag(0, 2);
+
+        const { playerGrid } = useGameStore.getState();
+        expect(playerGrid[0][0]).toBe(CellState.Empty);
+        expect(playerGrid[0][1]).toBe(CellState.Empty);
+        expect(playerGrid[0][2]).toBe(CellState.Empty);
+      });
+    });
+
+    describe('endDrag', () => {
+      it('should end the drag and reset drag state', () => {
+        const store = useGameStore.getState();
+
+        store.startDrag(0, 0, CellState.Filled);
+        store.continueDrag(0, 1);
+
+        const { isDragging: isDraggingBefore } = useGameStore.getState();
+        expect(isDraggingBefore).toBe(true);
+
+        store.endDrag();
+
+        const { isDragging, dragStartRow, dragStartCol, dragAction } = useGameStore.getState();
+        expect(isDragging).toBe(false);
+        expect(dragStartRow).toBe(null);
+        expect(dragStartCol).toBe(null);
+        expect(dragAction).toBe(null);
+      });
+
+      it('should increment moves by 1 for the entire drag operation', () => {
+        const store = useGameStore.getState();
+        const initialMoves = store.moves;
+
+        store.startDrag(0, 0, CellState.Filled);
+        store.continueDrag(0, 1);
+        store.continueDrag(0, 2);
+        store.endDrag();
+
+        const { moves } = useGameStore.getState();
+        expect(moves).toBe(initialMoves + 1);
+      });
+
+      it('should keep the cells marked during drag', () => {
+        const store = useGameStore.getState();
+
+        store.startDrag(0, 0, CellState.Filled);
+        store.continueDrag(0, 1);
+        store.continueDrag(0, 2);
+        store.endDrag();
+
+        const { playerGrid } = useGameStore.getState();
+        expect(playerGrid[0][0]).toBe(CellState.Filled);
+        expect(playerGrid[0][1]).toBe(CellState.Filled);
+        expect(playerGrid[0][2]).toBe(CellState.Filled);
+      });
+    });
+  });
 });
