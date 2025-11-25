@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { CellState } from '../types';
 
 interface CellProps {
@@ -23,7 +24,14 @@ export function Cell({
   onCellDragStart,
   onCellDragEnter,
 }: CellProps) {
+  // Track if we recently handled a touch event to prevent mouse event double-firing
+  const touchHandledRef = useRef(false);
+
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Ignore mouse events if we just handled a touch event
+    if (touchHandledRef.current) {
+      return;
+    }
     e.preventDefault();
     // Start drag on mouse down (this handles both clicks and drags)
     onCellDragStart(row, col, e.button === 2); // button 2 = right click
@@ -44,6 +52,12 @@ export function Cell({
 
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
+    // Set flag to prevent mouse events from firing
+    touchHandledRef.current = true;
+    // Reset flag after a short delay (mouse events fire ~300ms after touch on some browsers)
+    setTimeout(() => {
+      touchHandledRef.current = false;
+    }, 500);
     // Start drag on touch
     onCellDragStart(row, col, false);
   };
