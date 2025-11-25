@@ -168,13 +168,12 @@ function App() {
       </div>
 
       {/* Game Board - maximize space on mobile */}
-      <div className="w-full flex-1 overflow-x-auto overflow-y-auto flex justify-center items-start sm:mb-6 sm:flex-initial sm:max-h-[70vh]">
+      <div className="w-full flex-1 overflow-x-auto overflow-y-auto flex flex-col items-center sm:mb-6 sm:flex-initial sm:max-h-[70vh]">
         <GameBoard />
-      </div>
-
-      {/* Mobile Mode Toggle - below puzzle */}
-      <div className="w-full px-2 mt-0.5 mb-2 sm:hidden">
-        <ModeToggle />
+        {/* Mobile Mode Toggle - directly below puzzle */}
+        <div className="w-full px-2 mt-1 mb-2 sm:hidden">
+          <ModeToggle />
+        </div>
       </div>
 
       {/* Help tooltip - desktop only */}
