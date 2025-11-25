@@ -99,7 +99,7 @@ export function Cell({
     // 15x15 uses ~22px cells, smaller puzzles use 40px
     const mobileSizeClass = isLargePuzzle ? 'w-[22px] h-[22px]' : 'w-10 h-10';
 
-    const base = `${mobileSizeClass} sm:w-12 sm:h-12 border border-gray-400 relative flex items-center justify-center cursor-pointer transition-colors select-none touch-none`;
+    const base = `${mobileSizeClass} sm:w-12 sm:h-12 border border-gray-400 relative flex items-center justify-center cursor-pointer select-none touch-none`;
 
     // Add thicker borders every 5 rows/columns for better readability (internal only, not edges)
     const gridLines = [];
@@ -112,13 +112,11 @@ export function Cell({
 
     const gridLineClasses = gridLines.join(' ');
 
+    // For filled cells, we'll use a child element for the fill, not background color
+    // For other states, use background colors as before
     switch (state) {
       case CellState.Filled:
-        // Show red for mistakes, normal gray for correct
-        if (isMistake) {
-          return `${base} ${gridLineClasses} bg-red-600 hover:bg-red-500`;
-        }
-        return `${base} ${gridLineClasses} bg-gray-800 hover:bg-gray-700`;
+        return `${base} ${gridLineClasses} bg-white`;
       case CellState.MarkedEmpty:
         // Show red background for mistakes (marked empty but should be filled)
         if (isMistake) {
@@ -146,6 +144,13 @@ export function Cell({
       data-col={col}
       aria-label={`Cell ${row + 1}, ${col + 1}`}
     >
+      {state === CellState.Filled && (
+        <div
+          className={`absolute inset-[2px] transition-colors ${
+            isMistake ? 'bg-red-600 hover:bg-red-500' : 'bg-gray-800 hover:bg-gray-700'
+          }`}
+        />
+      )}
       {state === CellState.MarkedEmpty && (
         <span
           className={`font-thin absolute ${
