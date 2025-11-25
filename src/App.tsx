@@ -177,12 +177,39 @@ function App() {
         <ModeToggle />
       </div>
 
-      {/* Instructions - desktop only */}
-      <div className="hidden sm:block mt-8 max-w-md text-center text-sm text-gray-600">
-        <p className="mb-2">
-          <span className="font-semibold">Desktop:</span> Left-click to fill, right-click to mark
-          empty
-        </p>
+      {/* Help tooltip - desktop only */}
+      <div className="hidden sm:block mt-8">
+        <div className="relative inline-block group">
+          <button
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors text-gray-600 hover:text-gray-800"
+            aria-label="Show help"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-5 h-5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </button>
+          <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg whitespace-nowrap shadow-lg pointer-events-none">
+            <div className="text-center">
+              <span className="font-semibold">Desktop:</span> Left-click to fill, right-click to
+              mark empty
+            </div>
+            {/* Tooltip arrow */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+              <div className="border-4 border-transparent border-t-gray-800"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Completion Modal */}
