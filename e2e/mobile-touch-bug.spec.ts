@@ -25,8 +25,9 @@ test.describe('Mobile Touch Bug', () => {
     // Get the first cell
     const firstCell = page.locator('[role="gridcell"][data-row="0"][data-col="0"]');
 
-    // Verify cell starts empty (white background)
-    await expect(firstCell).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    // Verify cell starts empty (no inner fill div)
+    const initialFillDiv = firstCell.locator('div.absolute.inset-\\[2px\\]');
+    await expect(initialFillDiv).not.toBeVisible();
 
     // Tap the cell once
     await firstCell.tap();
@@ -34,15 +35,18 @@ test.describe('Mobile Touch Bug', () => {
     // Wait a bit for any potential double-fire events
     await page.waitForTimeout(100);
 
-    // Verify the cell is filled (not empty). It could be gray-800 (correct) or red-600 (mistake)
-    // The important thing is it's NOT white (empty), which would indicate a double-fire bug
-    const backgroundColor = await firstCell.evaluate(
-      (el) => window.getComputedStyle(el).backgroundColor
-    );
-    // Should be either gray-800 (rgb(31, 41, 55)) or red-600 (rgb(220, 38, 38))
-    // Should NOT be white (rgb(255, 255, 255)) or gray-50 (rgb(249, 250, 251))
-    expect(backgroundColor).not.toBe('rgb(255, 255, 255)');
-    expect(backgroundColor).not.toBe('rgb(249, 250, 251)');
+    // Verify the cell is filled by checking for the inner fill div
+    // The important thing is the fill div exists, which would NOT happen if there was a double-fire bug
+    const fillDiv = firstCell.locator('div.absolute.inset-\\[2px\\]');
+    await expect(fillDiv).toBeVisible();
+
+    // Verify the fill div has a filled color (not empty)
+    const fillColor = await fillDiv.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    // Should be a filled color (gray-800, gray-700, red-600, red-500, etc.)
+    // NOT white or transparent
+    expect(fillColor).not.toBe('rgb(255, 255, 255)');
+    expect(fillColor).not.toBe('rgba(0, 0, 0, 0)');
+    expect(fillColor).not.toBe('transparent');
   });
 
   test('single tap should mark empty without immediate unmark', async ({ page, isMobile }) => {
@@ -51,14 +55,17 @@ test.describe('Mobile Touch Bug', () => {
     }
 
     // Switch to mark empty mode
-    const markEmptyButton = page.getByRole('button', { name: 'Mark Empty' });
+    const markEmptyButton = page.getByRole('button', { name: 'Mark empty mode' });
     await markEmptyButton.click();
 
     // Get the first cell
     const firstCell = page.locator('[role="gridcell"][data-row="0"][data-col="0"]');
 
-    // Verify cell starts empty (white background)
-    await expect(firstCell).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    // Verify cell starts empty (no X mark, no fill div)
+    const initialXMark = firstCell.locator('span:has-text("×")');
+    await expect(initialXMark).not.toBeVisible();
+    const initialFillDiv = firstCell.locator('div.absolute.inset-\\[2px\\]');
+    await expect(initialFillDiv).not.toBeVisible();
 
     // Tap the cell once
     await firstCell.tap();
@@ -71,12 +78,8 @@ test.describe('Mobile Touch Bug', () => {
     const xMark = firstCell.locator('span:has-text("×")');
     await expect(xMark).toBeVisible();
 
-    // Verify the cell is NOT filled (should be white/gray, not dark)
-    const backgroundColor = await firstCell.evaluate(
-      (el) => window.getComputedStyle(el).backgroundColor
-    );
-    // Should NOT be gray-800 (filled) or red-600 (filled mistake)
-    expect(backgroundColor).not.toBe('rgb(31, 41, 55)');
-    expect(backgroundColor).not.toBe('rgb(220, 38, 38)');
+    // Verify the cell is NOT filled (should not have an inner fill div)
+    const fillDiv = firstCell.locator('div.absolute.inset-\\[2px\\]');
+    await expect(fillDiv).not.toBeVisible();
   });
 });
