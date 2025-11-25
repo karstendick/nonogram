@@ -10,7 +10,9 @@ A web-based nonogram puzzle game built with TypeScript. Nonograms are picture lo
 - **Frontend**: React + Vite
 - **Styling**: Tailwind CSS
 - **State Management**: Zustand
-- **Testing**: Vitest + React Testing Library
+- **Testing**:
+  - Unit: Vitest + React Testing Library
+  - E2E: Playwright (desktop + mobile)
 - **Code Quality**: ESLint, Prettier, Husky (pre-commit hooks)
 - **PWA**: Vite PWA Plugin
 - **Deployment**: GitHub Pages + GitHub Actions CI/CD
@@ -34,8 +36,11 @@ nonogram/
 │   ├── data/           # Puzzle data (JSON)
 │   ├── types/          # TypeScript types
 │   └── utils/          # Utility functions
-├── .github/workflows/  # CI/CD pipelines
-└── tests/              # Test files
+├── e2e/                # Playwright E2E tests
+├── .github/
+│   ├── actions/        # Composite actions (preview cleanup)
+│   └── workflows/      # CI/CD pipelines
+└── tests/              # Unit tests (Vitest)
 ```
 
 ## Completed Features
@@ -45,6 +50,8 @@ nonogram/
 - Vite + React + TypeScript
 - Tailwind CSS
 - ESLint + Prettier + Husky pre-commit hooks
+- Vitest for unit testing
+- Playwright for E2E testing (desktop + mobile)
 - GitHub Actions (CI + Deploy)
 - Type definitions
 
@@ -87,58 +94,40 @@ nonogram/
 
 - Thicker grid lines every 5 rows/columns (internal divisions only, not edges)
 - Unit tests for core logic (21 tests)
+- Puzzle completion recognition with congratulations message
+- Larger X marks for marked empty cells
+- Mobile mode toggle buttons with visual icons
+- Click completed clue to auto-mark remaining cells as empty
+- Real-time mistake highlighting (red cells for incorrect fills)
+- Drag interaction (fill/mark multiple cells in single array)
+
+### Phase 7: Enhanced Puzzle Selection UI ✅
+
+- New landing page with card-based navigation
+- Quick Play (random UUID seed)
+- Enter a Seed (manual seed entry for sharing puzzles)
+- Pre-made puzzle library (with icons/emoji)
+- Responsive mobile-first design
+- E2E test coverage for new navigation flow
+- GitHub Actions preview deployments for feature branches
+- Automated preview cleanup on branch deletion
 
 ## Planned Features
-
-### Phase 6: PWA & Polish (In Progress)
-
-- [x] Deploy to GitHub Pages
-- [ ] Design custom app icons (favicon, PWA icons)
-- [ ] Configure PWA manifest
-- [ ] Service worker for offline support
-- [ ] Component tests
-- [ ] Animations and transitions
-- [ ] Performance optimization
-- [x] Puzzle completion recognition/celebration
-  - Check playerGrid against cached solution (don't run solver on every move)
-  - Display congratulations message/animation when puzzle is solved
-- [x] Larger X marks for marked empty cells (should fill more of the cell)
-- [x] Improve mobile mode toggle buttons
-  - Move Fill/Mark Empty buttons below the puzzle instead of above
-  - Label buttons with visual icons (filled square for Fill, X for Mark Empty) instead of text labels
-  - Eliminate excessive whitespace between puzzle and buttons
-- [x] Click completed clue to auto-mark remaining cells as empty
-- [x] Real-time mistake highlighting (red) to prevent wasted effort
-
-### Phase 7: Enhanced Puzzle Selection UI
-
-**Planned features:**
-
-- Daily puzzles (uses date as seed: `2025-01-17-10`)
-- Quick play (random UUID seed)
-- Pre-made puzzle library (with icons/emoji)
-- Advanced: manual seed entry for sharing puzzles
 
 ### Phase 8: Additional Enhancements
 
 - [ ] Auto-save progress to localStorage
-- [ ] Highlight active row/column on hover
-- [ ] Multiple color support (colored nonograms)
-- [ ] Statistics tracking (completion time, moves)
 - [ ] Haptic feedback (mobile)
-- [ ] Dark mode
-- [x] Drag interaction (fill/mark multiple cells)
-  - Constrained to single array
-  - Desktop: drag follows mouse button
-  - Mobile: drag applies current mode
+- [ ] Animations and transitions
+- [ ] Component tests
+- [ ] Performance optimization
 
-### Phase 9: Large Puzzle Support (V3)
+### Phase 9: PWA Support
 
-- [ ] 20×20 and 25×25 grid sizes
-- [ ] Pinch-to-zoom gestures
-- [ ] Two-finger pan navigation
-- [ ] Optimized rendering for large grids
-- [ ] Device capability detection
+- [ ] Design custom app icons (favicon, PWA icons)
+- [ ] Configure PWA manifest
+- [ ] Service worker for offline support
+- [ ] Installable as PWA
 
 ## Puzzle Data Format
 
@@ -160,19 +149,27 @@ Puzzles stored in JSON with human-readable format:
 ## Deployment
 
 - **Build**: `npm run build` → `dist/`
-- **URL**: `https://karstendick.github.io/nonogram/`
+- **Production URL**: `https://karstendick.github.io/nonogram/`
+- **Preview URLs**: `https://karstendick.github.io/nonogram/preview/<branch-name>/`
 - **CI/CD**: GitHub Actions workflows
-  - CI: lint, format check, type check, test, build
-  - Deploy: automated on push to `main`
+  - CI: lint, format check, type check, test, build (on all PRs)
+  - Deploy (main): automated on push to `main` branch
+  - Deploy (preview): automated preview deployments for feature branches
+  - Cleanup: automated preview removal on branch deletion
+  - Delete merged branch: automated branch deletion and cleanup after PR merge
 
-## Success Criteria (V1)
+## Success Criteria
 
-- Playable nonogram puzzles (5×5, 10×10, 15×15)
-- Smooth mobile experience with touch gestures
-- Installable as PWA
-- Offline support
-- Responsive design (mobile-first)
-- Clean, type-safe TypeScript code
-- Zero ESLint warnings
-- Automated quality checks (pre-commit + CI)
-- Test coverage for core logic
+### V1 Status ✅
+
+- [x] Playable nonogram puzzles (5×5, 10×10, 15×15)
+- [x] Smooth mobile experience with touch gestures
+- [x] Responsive design (mobile-first)
+- [x] Clean, type-safe TypeScript code
+- [x] Zero ESLint warnings
+- [x] Automated quality checks (pre-commit + CI)
+- [x] Test coverage for core logic
+- [x] E2E test coverage
+- [x] Automated deployment to GitHub Pages
+- [ ] Installable as PWA
+- [ ] Offline support
