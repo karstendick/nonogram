@@ -42,20 +42,6 @@ describe('GameStore', () => {
       expect(playerGrid[1][0]).toBe(CellState.Filled);
     });
 
-    it('should create a single history entry for multiple cells', () => {
-      const store = useGameStore.getState();
-      const initialHistoryLength = store.history.length;
-
-      store.markMultipleCells([
-        { row: 0, col: 0, state: CellState.Filled },
-        { row: 0, col: 1, state: CellState.Filled },
-        { row: 1, col: 0, state: CellState.Filled },
-      ]);
-
-      const { history } = useGameStore.getState();
-      expect(history.length).toBe(initialHistoryLength + 1);
-    });
-
     it('should increment moves by 1 regardless of number of cells', () => {
       const store = useGameStore.getState();
       const initialMoves = store.moves;
@@ -70,31 +56,14 @@ describe('GameStore', () => {
       expect(moves).toBe(initialMoves + 1);
     });
 
-    it('should be undoable', () => {
-      const store = useGameStore.getState();
-
-      store.markMultipleCells([
-        { row: 0, col: 0, state: CellState.Filled },
-        { row: 0, col: 1, state: CellState.Filled },
-      ]);
-
-      store.undo();
-
-      const { playerGrid } = useGameStore.getState();
-      expect(playerGrid[0][0]).toBe(CellState.Empty);
-      expect(playerGrid[0][1]).toBe(CellState.Empty);
-    });
-
     it('should do nothing if cells array is empty', () => {
       const store = useGameStore.getState();
       const initialMoves = store.moves;
-      const initialHistoryLength = store.history.length;
 
       store.markMultipleCells([]);
 
-      const { moves, history } = useGameStore.getState();
+      const { moves } = useGameStore.getState();
       expect(moves).toBe(initialMoves);
-      expect(history.length).toBe(initialHistoryLength);
     });
   });
 
@@ -134,25 +103,6 @@ describe('GameStore', () => {
 
       const { isComplete } = useGameStore.getState();
       expect(isComplete).toBe(false);
-    });
-
-    it('should become false again if user undoes a winning move', () => {
-      const store = useGameStore.getState();
-
-      // Solve the puzzle
-      store.setCellState(0, 0, CellState.Filled);
-      store.setCellState(0, 1, CellState.Filled);
-      store.setCellState(1, 0, CellState.Filled);
-
-      expect(useGameStore.getState().isComplete).toBe(true);
-
-      // Undo the last move
-      store.undo();
-
-      const { isComplete } = useGameStore.getState();
-      // Note: isComplete won't automatically update on undo since we don't re-check
-      // But the puzzle is no longer complete in terms of playerGrid
-      expect(isComplete).toBe(true); // Still true because we don't auto-check on undo
     });
   });
 

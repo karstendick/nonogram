@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { GameBoard } from './components/GameBoard';
 import { ModeToggle } from './components/ModeToggle';
-import { Controls } from './components/Controls';
 import { CompletionModal } from './components/CompletionModal';
 import { PuzzleSelector } from './components/PuzzleSelector';
 import { PuzzleGenerator } from './components/PuzzleGenerator';
@@ -176,11 +175,6 @@ function App() {
       {/* Mobile Mode Toggle - below puzzle */}
       <div className="w-full px-2 mt-0.5 mb-2 sm:hidden">
         <ModeToggle />
-      </div>
-
-      {/* Controls - compact on mobile */}
-      <div className="w-full px-2 pb-2 sm:max-w-md sm:px-0">
-        <Controls />
       </div>
 
       {/* Instructions - desktop only */}
