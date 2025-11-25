@@ -109,40 +109,40 @@ export function GameBoard() {
             gridTemplateColumns: `repeat(${width}, minmax(0, 1fr))`,
           }}
         >
-          {columnClues.map((clues, colIndex) => (
-            <div
-              key={colIndex}
-              className={`${mobileCellWidth} sm:w-12 flex flex-col items-center justify-end gap-0 sm:gap-0.5 ${mobileColCluePadding} sm:pb-1`}
-              style={{
-                minHeight: `${clueHeight}rem`,
-              }}
-            >
-              {clues.map((clue, idx) => {
-                const isComplete = isColComplete(colIndex);
-                return (
+          {columnClues.map((clues, colIndex) => {
+            const isComplete = isColComplete(colIndex);
+            return (
+              <div
+                key={colIndex}
+                role={isComplete ? 'button' : undefined}
+                tabIndex={isComplete ? 0 : undefined}
+                onClick={() => handleColClueClick(colIndex)}
+                onKeyDown={(e) => {
+                  if (isComplete && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    handleColClueClick(colIndex);
+                  }
+                }}
+                className={`${mobileCellWidth} sm:w-12 flex flex-col items-center justify-end gap-0 sm:gap-0.5 ${mobileColCluePadding} sm:pb-1 ${
+                  isComplete ? 'cursor-pointer hover:bg-gray-100 rounded' : ''
+                }`}
+                style={{
+                  minHeight: `${clueHeight}rem`,
+                }}
+              >
+                {clues.map((clue, idx) => (
                   <div
                     key={idx}
-                    role={isComplete ? 'button' : undefined}
-                    tabIndex={isComplete ? 0 : undefined}
-                    onClick={() => handleColClueClick(colIndex)}
-                    onKeyDown={(e) => {
-                      if (isComplete && (e.key === 'Enter' || e.key === ' ')) {
-                        e.preventDefault();
-                        handleColClueClick(colIndex);
-                      }
-                    }}
                     className={`${mobileClueTextSize} sm:text-sm font-semibold text-center ${
-                      isComplete
-                        ? 'text-gray-400 line-through cursor-pointer hover:text-gray-500'
-                        : 'text-gray-700'
+                      isComplete ? 'text-gray-400 line-through' : 'text-gray-700'
                     }`}
                   >
                     {clue}
                   </div>
-                );
-              })}
-            </div>
-          ))}
+                ))}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -150,40 +150,40 @@ export function GameBoard() {
       <div className={`flex ${mobileGap} sm:gap-2`}>
         {/* Row clues */}
         <div className="flex flex-col gap-0 shrink-0">
-          {rowClues.map((clues, rowIndex) => (
-            <div
-              key={rowIndex}
-              className={`${mobileCellHeight} sm:h-12 flex items-center justify-end gap-0.5 sm:gap-1 ${mobileRowCluePadding} sm:pr-2`}
-              style={{
-                minWidth: `${mobileClueWidth}rem`,
-              }}
-            >
-              {clues.map((clue, idx) => {
-                const isComplete = isRowComplete(rowIndex);
-                return (
+          {rowClues.map((clues, rowIndex) => {
+            const isComplete = isRowComplete(rowIndex);
+            return (
+              <div
+                key={rowIndex}
+                role={isComplete ? 'button' : undefined}
+                tabIndex={isComplete ? 0 : undefined}
+                onClick={() => handleRowClueClick(rowIndex)}
+                onKeyDown={(e) => {
+                  if (isComplete && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    handleRowClueClick(rowIndex);
+                  }
+                }}
+                className={`${mobileCellHeight} sm:h-12 flex items-center justify-end gap-0.5 sm:gap-1 ${mobileRowCluePadding} sm:pr-2 ${
+                  isComplete ? 'cursor-pointer hover:bg-gray-100 rounded' : ''
+                }`}
+                style={{
+                  minWidth: `${mobileClueWidth}rem`,
+                }}
+              >
+                {clues.map((clue, idx) => (
                   <div
                     key={idx}
-                    role={isComplete ? 'button' : undefined}
-                    tabIndex={isComplete ? 0 : undefined}
-                    onClick={() => handleRowClueClick(rowIndex)}
-                    onKeyDown={(e) => {
-                      if (isComplete && (e.key === 'Enter' || e.key === ' ')) {
-                        e.preventDefault();
-                        handleRowClueClick(rowIndex);
-                      }
-                    }}
                     className={`${mobileClueTextSize} sm:text-sm font-semibold text-center ${
-                      isComplete
-                        ? 'text-gray-400 line-through cursor-pointer hover:text-gray-500'
-                        : 'text-gray-700'
+                      isComplete ? 'text-gray-400 line-through' : 'text-gray-700'
                     }`}
                   >
                     {clue}
                   </div>
-                );
-              })}
-            </div>
-          ))}
+                ))}
+              </div>
+            );
+          })}
         </div>
 
         {/* Game grid */}
