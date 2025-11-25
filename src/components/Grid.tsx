@@ -17,13 +17,24 @@ export function Grid() {
     let newState: CellState;
 
     if (isRightClick) {
-      // Right click: toggle between empty and marked empty
+      // Right click: toggle between empty and marked empty (only if not filled)
+      if (currentState === CellState.Filled) {
+        return; // Cannot mark empty a filled cell
+      }
       newState = currentState === CellState.MarkedEmpty ? CellState.Empty : CellState.MarkedEmpty;
     } else {
       // Left click or tap: depends on mode (mobile) or just fill (desktop)
       if (currentMode === InteractionMode.MarkEmpty) {
+        // Mark empty mode: toggle between empty and marked empty (only if not filled)
+        if (currentState === CellState.Filled) {
+          return; // Cannot mark empty a filled cell
+        }
         newState = currentState === CellState.MarkedEmpty ? CellState.Empty : CellState.MarkedEmpty;
       } else {
+        // Fill mode: toggle between empty and filled (only if not marked empty)
+        if (currentState === CellState.MarkedEmpty) {
+          return; // Cannot fill a marked empty cell
+        }
         newState = currentState === CellState.Filled ? CellState.Empty : CellState.Filled;
       }
     }
@@ -51,6 +62,7 @@ export function Grid() {
             col={colIndex}
             gridWidth={currentPuzzle.width}
             gridHeight={currentPuzzle.height}
+            solutionValue={currentPuzzle.solution[rowIndex][colIndex]}
             onCellClick={handleCellClick}
           />
         ))
