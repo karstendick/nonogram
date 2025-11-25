@@ -1,0 +1,44 @@
+name: 'Cleanup Preview Deployment'
+description: 'Removes preview deployment for a deleted branch'
+
+inputs:
+  branch-name:
+    description: 'The name of the branch to clean up'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout gh-pages
+      uses: actions/checkout@v4
+      with:
+        ref: gh-pages
+
+    - name: Extract branch name
+      id: branch
+      shell: bash
+      run: |
+        # Convert branch name to URL-safe format (same as deploy)
+        SAFE_BRANCH_NAME=$(echo "${{ inputs.branch-name }}" | sed 's/\//-/g')
+        echo "name=$SAFE_BRANCH_NAME" >> $GITHUB_OUTPUT
+
+    - name: Remove preview
+      shell: bash
+      run: |
+        if [ -d "preview/${{ steps.branch.outputs.name }}" ]; then
+          # Configure git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Remove preview directory
+          rm -rf "preview/${{ steps.branch.outputs.name }}"
+
+          # Commit and push
+          git add .
+          git commit -m "Remove preview for deleted branch ${{ steps.branch.outputs.name }}"
+          git push
+
+          echo "::notice::Removed preview for branch ${{ steps.branch.outputs.name }}"
+        else
+          echo "::notice::No preview found for branch ${{ steps.branch.outputs.name }}"
+        fi
