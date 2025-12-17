@@ -1,1 +1,0 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/nonogram/preview/claude-fix-puzzle-text-selection-pcstL/sw.js', { scope: '/nonogram/preview/claude-fix-puzzle-text-selection-pcstL/' })})}
