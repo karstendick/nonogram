@@ -27,7 +27,7 @@ function SeedDisplay({ seed, className = '' }: { seed: string; className?: strin
   return (
     <button
       onClick={handleClick}
-      className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-mono bg-gray-100 hover:bg-gray-200 rounded transition-colors ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-mono bg-gray-100 hover:bg-gray-200 rounded transition-colors select-none ${className}`}
       title="Click to copy seed"
     >
       <span className="text-gray-600">Seed:</span>
@@ -124,7 +124,7 @@ function App() {
           <div className="flex items-center justify-between mb-1">
             <button
               onClick={handleBackToLanding}
-              className="p-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+              className="p-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors select-none"
               aria-label="Back to home"
             >
               ← Back
@@ -165,7 +165,7 @@ function App() {
           )}
           <button
             onClick={handleBackToLanding}
-            className="mt-4 px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
+            className="mt-4 px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors select-none"
           >
             ← Back to Home
           </button>
@@ -185,7 +185,7 @@ function App() {
       <div className="hidden sm:block mt-8">
         <div className="relative inline-block group">
           <button
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors text-gray-600 hover:text-gray-800"
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors text-gray-600 hover:text-gray-800 select-none"
             aria-label="Show help"
           >
             <svg

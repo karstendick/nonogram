@@ -9,7 +9,7 @@ export function ModeToggle() {
       <button
         onClick={() => setMode(InteractionMode.MarkEmpty)}
         className={`
-          flex-1 aspect-square rounded-md text-4xl font-bold transition-colors flex items-center justify-center
+          flex-1 aspect-square rounded-md text-4xl font-bold transition-colors flex items-center justify-center select-none
           ${
             currentMode === InteractionMode.MarkEmpty
               ? 'bg-gray-800 text-white'
@@ -23,7 +23,7 @@ export function ModeToggle() {
       <button
         onClick={() => setMode(InteractionMode.Fill)}
         className={`
-          flex-1 aspect-square rounded-md text-4xl font-bold transition-colors flex items-center justify-center
+          flex-1 aspect-square rounded-md text-4xl font-bold transition-colors flex items-center justify-center select-none
           ${
             currentMode === InteractionMode.Fill
               ? 'bg-gray-800 text-white'
