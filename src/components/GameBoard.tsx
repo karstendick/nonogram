@@ -123,7 +123,7 @@ export function GameBoard() {
                     handleColClueClick(colIndex);
                   }
                 }}
-                className={`${mobileCellWidth} sm:w-12 flex flex-col items-center justify-end gap-0 sm:gap-0.5 ${mobileColCluePadding} sm:pb-1 ${
+                className={`${mobileCellWidth} sm:w-12 flex flex-col items-center justify-end gap-0 sm:gap-0.5 ${mobileColCluePadding} sm:pb-1 select-none ${
                   isComplete ? 'cursor-pointer hover:bg-gray-100 rounded' : ''
                 }`}
                 style={{
@@ -164,7 +164,7 @@ export function GameBoard() {
                     handleRowClueClick(rowIndex);
                   }
                 }}
-                className={`${mobileCellHeight} sm:h-12 flex items-center justify-end gap-0.5 sm:gap-1 ${mobileRowCluePadding} sm:pr-2 ${
+                className={`${mobileCellHeight} sm:h-12 flex items-center justify-end gap-0.5 sm:gap-1 ${mobileRowCluePadding} sm:pr-2 select-none ${
                   isComplete ? 'cursor-pointer hover:bg-gray-100 rounded' : ''
                 }`}
                 style={{
