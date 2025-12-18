@@ -17,21 +17,36 @@ jobs:
       contents: write
 
     steps:
+      - name: Check if branch still exists
+        id: check-branch
+        run: |
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
+          if git ls-remote --exit-code --heads https://github.com/${{ github.repository }}.git "$BRANCH" > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "::notice::Branch '$BRANCH' no longer exists, skipping preview deployment"
+          fi
+
       - name: Checkout code
+        if: steps.check-branch.outputs.exists == 'true'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: Setup Node.js
+        if: steps.check-branch.outputs.exists == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
+        if: steps.check-branch.outputs.exists == 'true'
         run: npm ci
 
       - name: Extract branch name
+        if: steps.check-branch.outputs.exists == 'true'
         id: branch
         run: |
           # Convert branch name to URL-safe format (replace / with -)
@@ -41,11 +56,13 @@ jobs:
           echo "Preview will be deployed to: https://karstendick.github.io/nonogram/preview/$SAFE_BRANCH_NAME/"
 
       - name: Build project
+        if: steps.check-branch.outputs.exists == 'true'
         run: npm run build
         env:
           VITE_BASE_PATH: /nonogram/preview/${{ steps.branch.outputs.name }}/
 
       - name: Deploy to GitHub Pages (preview)
+        if: steps.check-branch.outputs.exists == 'true'
         run: |
           # Configure git
           git config --global user.name "github-actions[bot]"
@@ -114,5 +131,6 @@ jobs:
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages
 
       - name: Comment preview URL
+        if: steps.check-branch.outputs.exists == 'true'
         run: |
           echo "::notice::Preview deployed to https://karstendick.github.io/nonogram/preview/${{ steps.branch.outputs.name }}/"
