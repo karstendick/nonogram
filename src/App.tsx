@@ -43,7 +43,11 @@ function SeedDisplay({ seed, className = '' }: { seed: string; className?: strin
 
 function App() {
   const { currentPuzzle, loadPuzzle } = useGameStore();
-  const [view, setView] = useState<'landing' | 'enterSeed' | 'premade' | 'game'>('landing');
+  // If a puzzle was persisted from a previous session and isn't finished, resume it.
+  const hasSavedProgress = currentPuzzle !== null && !useGameStore.getState().isComplete;
+  const [view, setView] = useState<'landing' | 'enterSeed' | 'premade' | 'game'>(
+    hasSavedProgress ? 'game' : 'landing'
+  );
 
   // Check if the current puzzle is generated (vs pre-made)
   const isGeneratedPuzzle = currentPuzzle?.title.startsWith('Generated');
