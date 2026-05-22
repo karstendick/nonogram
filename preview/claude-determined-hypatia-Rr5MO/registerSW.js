@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/nonogram/preview/claude-determined-hypatia-Rr5MO/sw.js', { scope: '/nonogram/preview/claude-determined-hypatia-Rr5MO/' })})}
