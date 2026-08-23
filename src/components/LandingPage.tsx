@@ -1,20 +1,11 @@
 import { useState } from 'react';
 import { Puzzle } from '../types';
-import { generatePuzzle } from '../logic/puzzleGenerator';
+import { generateRandomPuzzle } from '../logic/randomPuzzle';
 
 interface LandingPageProps {
   onPuzzleSelected: (puzzle: Puzzle) => void;
   onNavigateToSeedEntry: () => void;
   onNavigateToPremade: () => void;
-}
-
-// Generate a random UUID v4
-function generateRandomUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
 }
 
 export function LandingPage({
@@ -30,16 +21,14 @@ export function LandingPage({
 
     // Run generation in a timeout to allow UI to update
     setTimeout(() => {
-      const randomSeed = generateRandomUUID();
-      const puzzle = generatePuzzle(size, randomSeed);
+      const puzzle = generateRandomPuzzle(size);
 
       setIsGenerating(false);
 
       if (puzzle) {
         onPuzzleSelected(puzzle);
       } else {
-        // Retry with a different seed if generation failed
-        console.warn('Failed to generate puzzle, retrying...');
+        // Retry if every seed we tried failed to produce a valid puzzle
         handleQuickPlay();
       }
     }, 10);

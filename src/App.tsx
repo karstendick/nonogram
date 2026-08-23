@@ -6,6 +6,7 @@ import { LandingPage } from './components/LandingPage';
 import { PuzzleSelector } from './components/PuzzleSelector';
 import { PuzzleGenerator } from './components/PuzzleGenerator';
 import { useGameStore } from './store/gameStore';
+import { isGeneratedPuzzle } from './logic/randomPuzzle';
 import type { Puzzle } from './types';
 
 // Component to display and copy puzzle seed
@@ -50,7 +51,7 @@ function App() {
   );
 
   // Check if the current puzzle is generated (vs pre-made)
-  const isGeneratedPuzzle = currentPuzzle?.title.startsWith('Generated');
+  const isGenerated = isGeneratedPuzzle(currentPuzzle);
 
   const handlePuzzleSelected = (puzzle: Puzzle) => {
     loadPuzzle(puzzle);
@@ -139,7 +140,7 @@ function App() {
               </div>
             )}
           </div>
-          {currentPuzzle && isGeneratedPuzzle && (
+          {currentPuzzle && isGenerated && (
             <div className="flex justify-center">
               <SeedDisplay seed={currentPuzzle.id} />
             </div>
@@ -160,7 +161,7 @@ function App() {
                   {currentPuzzle.width} × {currentPuzzle.height}
                 </span>
               </div>
-              {isGeneratedPuzzle && (
+              {isGenerated && (
                 <div className="mt-2 flex justify-center">
                   <SeedDisplay seed={currentPuzzle.id} />
                 </div>
@@ -221,7 +222,10 @@ function App() {
       </div>
 
       {/* Completion Modal */}
-      <CompletionModal onBackToSelection={handleBackToLanding} />
+      <CompletionModal
+        onBackToSelection={handleBackToLanding}
+        onPlayAnother={handlePuzzleSelected}
+      />
     </div>
   );
 }
