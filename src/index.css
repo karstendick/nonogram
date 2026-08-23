@@ -17,6 +17,38 @@
   animation: scale-in 0.3s ease-out;
 }
 
+/* Replay: a mark appearing on the board. Duration is driven by a custom
+   property so the dev tuning panel can vary it live. */
+@keyframes mark-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes mark-fade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-mark-in {
+  animation: mark-in var(--replay-fade-ms, 180ms) ease-out;
+}
+
+/* X-marks are centered with an inline transform, so they fade only --
+   animating transform here would fight that centering. */
+.animate-mark-fade {
+  animation: mark-fade var(--replay-fade-ms, 180ms) ease-out;
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

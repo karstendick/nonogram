@@ -8,6 +8,10 @@ interface CellProps {
   gridWidth: number;
   gridHeight: number;
   solutionValue: boolean;
+  // Replay renders a read-only board: no input, no hover affordance, and marks
+  // fade in as they appear.
+  interactive?: boolean;
+  animateMarks?: boolean;
   onCellClick: (row: number, col: number, isRightClick: boolean) => void;
   onCellDragStart: (row: number, col: number, isRightClick: boolean) => void;
   onCellDragEnter: (row: number, col: number) => void;
@@ -20,6 +24,8 @@ export function Cell({
   gridWidth,
   gridHeight,
   solutionValue,
+  interactive = true,
+  animateMarks = false,
   onCellClick,
   onCellDragStart,
   onCellDragEnter,
@@ -29,7 +35,7 @@ export function Cell({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     // Ignore mouse events if we just handled a touch event
-    if (touchHandledRef.current) {
+    if (!interactive || touchHandledRef.current) {
       return;
     }
     e.preventDefault();
@@ -43,6 +49,7 @@ export function Cell({
   };
 
   const handleMouseEnter = (e: React.MouseEvent) => {
+    if (!interactive) return;
     // Continue drag when mouse enters this cell
     if (e.buttons > 0) {
       // Only if mouse button is pressed
@@ -51,6 +58,7 @@ export function Cell({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (!interactive) return;
     e.preventDefault();
     // Set flag to prevent mouse events from firing
     touchHandledRef.current = true;
@@ -63,6 +71,7 @@ export function Cell({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    if (!interactive) return;
     // Prevent page scrolling and pull-to-refresh while dragging
     e.preventDefault();
 
@@ -78,6 +87,7 @@ export function Cell({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!interactive) return;
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       // Use click handler for keyboard accessibility
@@ -99,7 +109,9 @@ export function Cell({
     // 15x15 uses ~22px cells, smaller puzzles use 40px
     const mobileSizeClass = isLargePuzzle ? 'w-[22px] h-[22px]' : 'w-10 h-10';
 
-    const base = `${mobileSizeClass} sm:w-12 sm:h-12 border border-gray-400 relative flex items-center justify-center cursor-pointer select-none touch-none`;
+    const base = `${mobileSizeClass} sm:w-12 sm:h-12 border border-gray-400 relative flex items-center justify-center select-none touch-none ${
+      interactive ? 'cursor-pointer' : 'cursor-default'
+    }`;
 
     // Add thicker borders every 5 rows/columns for better readability (internal only, not edges)
     const gridLines = [];
@@ -120,12 +132,12 @@ export function Cell({
       case CellState.MarkedEmpty:
         // Show red background for mistakes (marked empty but should be filled)
         if (isMistake) {
-          return `${base} ${gridLineClasses} bg-red-100 hover:bg-red-50`;
+          return `${base} ${gridLineClasses} bg-red-100 ${interactive ? 'hover:bg-red-50' : ''}`;
         }
-        return `${base} ${gridLineClasses} bg-white hover:bg-gray-100`;
+        return `${base} ${gridLineClasses} bg-white ${interactive ? 'hover:bg-gray-100' : ''}`;
       case CellState.Empty:
       default:
-        return `${base} ${gridLineClasses} bg-white hover:bg-gray-50`;
+        return `${base} ${gridLineClasses} bg-white ${interactive ? 'hover:bg-gray-50' : ''}`;
     }
   };
 
@@ -146,14 +158,16 @@ export function Cell({
     >
       {state === CellState.Filled && (
         <div
-          className={`absolute inset-[2px] transition-colors ${
-            isMistake ? 'bg-red-600 hover:bg-red-500' : 'bg-gray-800 hover:bg-gray-700'
+          className={`absolute inset-[2px] transition-colors ${animateMarks ? 'animate-mark-in' : ''} ${
+            isMistake
+              ? `bg-red-600 ${interactive ? 'hover:bg-red-500' : ''}`
+              : `bg-gray-800 ${interactive ? 'hover:bg-gray-700' : ''}`
           }`}
         />
       )}
       {state === CellState.MarkedEmpty && (
         <span
-          className={`font-thin absolute ${
+          className={`font-thin absolute ${animateMarks ? 'animate-mark-fade' : ''} ${
             isLargePuzzle ? 'text-[21px] sm:text-[46px]' : 'text-[38px] sm:text-[46px]'
           } ${isMistake ? 'text-red-600' : 'text-gray-800'}`}
           style={{

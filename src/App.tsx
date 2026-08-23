@@ -1,12 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { GameBoard } from './components/GameBoard';
 import { ModeToggle } from './components/ModeToggle';
 import { CompletionModal } from './components/CompletionModal';
 import { LandingPage } from './components/LandingPage';
 import { PuzzleSelector } from './components/PuzzleSelector';
 import { PuzzleGenerator } from './components/PuzzleGenerator';
+import { SolveReplay } from './components/SolveReplay';
+import { ReplayTuner } from './components/ReplayTuner';
 import { useGameStore } from './store/gameStore';
 import { isGeneratedPuzzle } from './logic/randomPuzzle';
+import { buildReplaySequence, REPLAY_TIMING } from './logic/replay';
+import type { ReplayTiming } from './logic/replay';
 import type { Puzzle } from './types';
 
 // Component to display and copy puzzle seed
@@ -43,7 +47,7 @@ function SeedDisplay({ seed, className = '' }: { seed: string; className?: strin
 }
 
 function App() {
-  const { currentPuzzle, loadPuzzle } = useGameStore();
+  const { currentPuzzle, playerGrid, markLog, isComplete, loadPuzzle } = useGameStore();
   // If a puzzle was persisted from a previous session and isn't finished, resume it.
   const hasSavedProgress = currentPuzzle !== null && !useGameStore.getState().isComplete;
   const [view, setView] = useState<'landing' | 'enterSeed' | 'premade' | 'game'>(
@@ -53,8 +57,42 @@ function App() {
   // Check if the current puzzle is generated (vs pre-made)
   const isGenerated = isGeneratedPuzzle(currentPuzzle);
 
+  // Replay of the player's solve, shown before the completion modal
+  const [replayPhase, setReplayPhase] = useState<'idle' | 'playing' | 'done'>('idle');
+  const [forceReplay, setForceReplay] = useState(false);
+  const [timing, setTiming] = useState<ReplayTiming>(REPLAY_TIMING);
+  const wasComplete = useRef(isComplete);
+
+  const replaySequence = useMemo(
+    () =>
+      isComplete && currentPuzzle
+        ? buildReplaySequence(markLog, playerGrid, currentPuzzle.width)
+        : [],
+    [isComplete, currentPuzzle, markLog, playerGrid]
+  );
+
+  // Start the replay when the puzzle is solved during this session. A puzzle
+  // that was already complete on load doesn't replay — that path goes to the
+  // landing page anyway.
+  useEffect(() => {
+    if (isComplete && !wasComplete.current) {
+      setForceReplay(false);
+      setReplayPhase('playing');
+    } else if (!isComplete) {
+      setReplayPhase('idle');
+    }
+    wasComplete.current = isComplete;
+  }, [isComplete]);
+
+  const startReplay = () => {
+    setForceReplay(true);
+    setReplayPhase('playing');
+  };
+
   const handlePuzzleSelected = (puzzle: Puzzle) => {
     loadPuzzle(puzzle);
+    wasComplete.current = false;
+    setReplayPhase('idle');
     setView('game');
   };
 
@@ -179,11 +217,24 @@ function App() {
 
       {/* Game Board - maximize space on mobile */}
       <div className="w-full flex-1 overflow-x-auto overflow-y-auto flex flex-col items-center sm:mb-6 sm:flex-initial sm:max-h-[70vh]">
-        <GameBoard />
-        {/* Mobile Mode Toggle - directly below puzzle */}
-        <div className="w-full px-2 mt-1 mb-2 sm:hidden">
-          <ModeToggle />
-        </div>
+        {replayPhase === 'playing' && currentPuzzle ? (
+          <SolveReplay
+            sequence={replaySequence}
+            width={currentPuzzle.width}
+            height={currentPuzzle.height}
+            timing={timing}
+            forcePlay={forceReplay}
+            onFinished={() => setReplayPhase('done')}
+          />
+        ) : (
+          <>
+            <GameBoard />
+            {/* Mobile Mode Toggle - directly below puzzle */}
+            <div className="w-full px-2 mt-1 mb-2 sm:hidden">
+              <ModeToggle />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Help tooltip - desktop only */}
@@ -221,11 +272,20 @@ function App() {
         </div>
       </div>
 
-      {/* Completion Modal */}
-      <CompletionModal
-        onBackToSelection={handleBackToLanding}
-        onPlayAnother={handlePuzzleSelected}
-      />
+      {/* Completion Modal - held back until the replay finishes */}
+      {replayPhase !== 'playing' && (
+        <CompletionModal
+          onBackToSelection={handleBackToLanding}
+          onPlayAnother={handlePuzzleSelected}
+          onWatchReplay={startReplay}
+          canWatchReplay={replaySequence.length > 0}
+        />
+      )}
+
+      {/* Dev-only timing sliders; stripped from production builds */}
+      {import.meta.env.DEV && replaySequence.length > 0 && (
+        <ReplayTuner timing={timing} onChange={setTiming} onReplay={startReplay} />
+      )}
     </div>
   );
 }

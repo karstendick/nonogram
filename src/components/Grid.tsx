@@ -3,13 +3,22 @@ import { Cell } from './Cell';
 import { useGameStore } from '../store/gameStore';
 import { CellState, InteractionMode } from '../types';
 
-export function Grid() {
+interface GridProps {
+  // Replay passes the grid to draw; normal play draws the player's own grid
+  displayGrid?: CellState[][];
+  interactive?: boolean;
+}
+
+export function Grid({ displayGrid, interactive = true }: GridProps) {
   const { currentPuzzle, playerGrid, currentMode, setCellState, startDrag, continueDrag, endDrag } =
     useGameStore();
   const gridRef = useRef<HTMLDivElement>(null);
+  const grid = displayGrid ?? playerGrid;
 
   // Add global mouse up listener to end drag
   useEffect(() => {
+    if (!interactive) return;
+
     const handleMouseUp = () => {
       endDrag();
     };
@@ -21,7 +30,7 @@ export function Grid() {
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('touchend', handleMouseUp);
     };
-  }, [endDrag]);
+  }, [endDrag, interactive]);
 
   if (!currentPuzzle) {
     return <div>No puzzle loaded</div>;
@@ -81,7 +90,7 @@ export function Grid() {
       }}
       aria-label="Nonogram game grid"
     >
-      {playerGrid.map((row, rowIndex) =>
+      {grid.map((row, rowIndex) =>
         row.map((cellState, colIndex) => (
           <Cell
             key={`${rowIndex}-${colIndex}`}
@@ -91,6 +100,8 @@ export function Grid() {
             gridWidth={currentPuzzle.width}
             gridHeight={currentPuzzle.height}
             solutionValue={currentPuzzle.solution[rowIndex][colIndex]}
+            interactive={interactive}
+            animateMarks={!interactive}
             onCellClick={handleCellClick}
             onCellDragStart={handleCellDragStart}
             onCellDragEnter={handleCellDragEnter}

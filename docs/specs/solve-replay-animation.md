@@ -122,6 +122,9 @@ Sliders: total duration, min interval, max interval, end hold, and per-cell fade
 also gets a **Replay** button, so values can be changed and re-watched immediately without solving a
 puzzle again — that loop is the whole point of the panel.
 
+The panel starts collapsed as a corner pill: expanded, it covers the Skip button on a phone-sized
+screen and swallows the taps. It remembers being opened, so desktop tuning is one click away.
+
 Slider values are held in React state and passed to the replay as props, overriding the constants.
 They persist to `localStorage` under a dev-only key so a page reload doesn't reset a tuning session.
 Nothing about the panel touches the shipped defaults: once the numbers feel right, they get written

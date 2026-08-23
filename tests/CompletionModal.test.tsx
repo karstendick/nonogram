@@ -41,7 +41,14 @@ describe('CompletionModal', () => {
   it('offers to play another puzzle of the same size for generated puzzles', () => {
     completeWith(makePuzzle('Generated 15×15', 15));
 
-    render(<CompletionModal onBackToSelection={vi.fn()} onPlayAnother={vi.fn()} />);
+    render(
+      <CompletionModal
+        onBackToSelection={vi.fn()}
+        onPlayAnother={vi.fn()}
+        onWatchReplay={vi.fn()}
+        canWatchReplay={false}
+      />
+    );
 
     expect(screen.getByText('Play Another 15×15')).toBeInTheDocument();
     expect(screen.getByText('Admire Puzzle')).toBeInTheDocument();
@@ -51,7 +58,14 @@ describe('CompletionModal', () => {
   it('does not offer to play another puzzle for pre-made puzzles', () => {
     completeWith(makePuzzle('Heart', 7));
 
-    render(<CompletionModal onBackToSelection={vi.fn()} onPlayAnother={vi.fn()} />);
+    render(
+      <CompletionModal
+        onBackToSelection={vi.fn()}
+        onPlayAnother={vi.fn()}
+        onWatchReplay={vi.fn()}
+        canWatchReplay={false}
+      />
+    );
 
     expect(screen.queryByText(/Play Another/)).not.toBeInTheDocument();
     expect(screen.getByText('Admire Puzzle')).toBeInTheDocument();
@@ -61,7 +75,14 @@ describe('CompletionModal', () => {
     completeWith(makePuzzle('Generated 10×10', 10));
     const onPlayAnother = vi.fn();
 
-    render(<CompletionModal onBackToSelection={vi.fn()} onPlayAnother={onPlayAnother} />);
+    render(
+      <CompletionModal
+        onBackToSelection={vi.fn()}
+        onPlayAnother={onPlayAnother}
+        onWatchReplay={vi.fn()}
+        canWatchReplay={false}
+      />
+    );
 
     fireEvent.click(screen.getByText('Play Another 10×10'));
 
@@ -81,7 +102,12 @@ describe('CompletionModal', () => {
     useGameStore.setState({ currentPuzzle: makePuzzle('Generated 5×5', 5), isComplete: false });
 
     const { container } = render(
-      <CompletionModal onBackToSelection={vi.fn()} onPlayAnother={vi.fn()} />
+      <CompletionModal
+        onBackToSelection={vi.fn()}
+        onPlayAnother={vi.fn()}
+        onWatchReplay={vi.fn()}
+        canWatchReplay={false}
+      />
     );
 
     expect(container).toBeEmptyDOMElement();
@@ -91,11 +117,54 @@ describe('CompletionModal', () => {
     completeWith(makePuzzle('Generated 5×5', 5));
 
     const { container } = render(
-      <CompletionModal onBackToSelection={vi.fn()} onPlayAnother={vi.fn()} />
+      <CompletionModal
+        onBackToSelection={vi.fn()}
+        onPlayAnother={vi.fn()}
+        onWatchReplay={vi.fn()}
+        canWatchReplay={false}
+      />
     );
 
     fireEvent.click(screen.getByText('Admire Puzzle'));
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  describe('Watch Again', () => {
+    it('offers a replay when there is one to watch', () => {
+      completeWith(makePuzzle('Generated 5×5', 5));
+      const onWatchReplay = vi.fn();
+
+      render(
+        <CompletionModal
+          onBackToSelection={vi.fn()}
+          onPlayAnother={vi.fn()}
+          onWatchReplay={onWatchReplay}
+          canWatchReplay
+        />
+      );
+
+      fireEvent.click(screen.getByText('Watch Again'));
+
+      expect(onWatchReplay).toHaveBeenCalledTimes(1);
+    });
+
+    it('hides the button when there is nothing recorded to replay', () => {
+      completeWith(makePuzzle('Generated 5×5', 5));
+
+      render(
+        <CompletionModal
+          onBackToSelection={vi.fn()}
+          onPlayAnother={vi.fn()}
+          onWatchReplay={vi.fn()}
+          canWatchReplay={false}
+        />
+      );
+
+      expect(screen.queryByText('Watch Again')).not.toBeInTheDocument();
+      // The other actions are unaffected
+      expect(screen.getByText('Admire Puzzle')).toBeInTheDocument();
+      expect(screen.getByText('Back to Puzzle Selection')).toBeInTheDocument();
+    });
   });
 });
