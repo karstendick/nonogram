@@ -9,10 +9,15 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    # Check out into a subdirectory, not the workspace root. Checking out
+    # gh-pages over the root would replace this action's own action.yml, and the
+    # runner needs it again at the end of the job to run the nested checkout's
+    # post step -- which fails the job even though the cleanup itself succeeded.
     - name: Checkout gh-pages
       uses: actions/checkout@v4
       with:
         ref: gh-pages
+        path: gh-pages
 
     - name: Extract branch name
       id: branch
@@ -24,6 +29,7 @@ runs:
 
     - name: Remove preview
       shell: bash
+      working-directory: gh-pages
       run: |
         if [ -d "preview/${{ steps.branch.outputs.name }}" ]; then
           # Configure git
