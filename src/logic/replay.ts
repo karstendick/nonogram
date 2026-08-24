@@ -7,8 +7,8 @@ export interface ReplayMark {
   state: CellState.Filled | CellState.MarkedEmpty;
 }
 
-// Timing values that determine how the replay feels.
-// Tunable in dev via ReplayTuner; these are the values that ship.
+// Timing values that determine how the replay feels. Settled by feel with a
+// dev-only slider panel, which was removed once these numbers were locked in.
 export interface ReplayTiming {
   totalMs: number; // target duration for the whole replay
   minIntervalMs: number; // floor on the per-mark delay

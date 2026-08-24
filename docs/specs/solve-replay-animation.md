@@ -115,6 +115,11 @@ replay as overridable props, which is what makes the tuning panel below possible
 
 ### Dev-only tuning panel
 
+> **Removed after the values were locked in.** The panel did its job — the numbers in
+> `REPLAY_TIMING` came out of it — and was deleted rather than carried as dead dev-only code.
+> `SolveReplay` keeps its optional `timing` prop, so re-adding a panel later is a small change.
+> The rest of this section describes the panel as it was built.
+
 Every timing value above is a guess until it is on screen, so a small panel of sliders renders
 alongside the replay, gated on `import.meta.env.DEV`. It is stripped from production builds by Vite,
 so players never see it and it costs nothing in the shipped bundle.
@@ -195,7 +200,7 @@ puzzle does not replay — that path already sends the user to the landing page.
 8. **`src/index.css`** — a short fade/scale keyframe for a mark appearing, in the style of the
    existing `animate-scale-in`, with its duration driven by a CSS custom property so the tuning
    panel can vary it.
-9. **`src/components/ReplayTuner.tsx` (new)** — the slider panel plus its Replay button, rendered by
+9. **`src/components/ReplayTuner.tsx` (new, since removed)** — the slider panel plus its Replay button, rendered by
    `App` only when `import.meta.env.DEV`. Owns the override values, persists them to `localStorage`
    under a dev-only key, and passes them into `SolveReplay`. Timing props on `SolveReplay` default
    to the constants in `replay.ts`, so nothing changes when the panel is absent.
@@ -249,7 +254,7 @@ Run `npm run validate` (lint + format check + type-check + unit tests with cover
 2. **Hold duration and total duration.** ~600ms hold and a ~4s total are starting values; may want
    tuning once it's on screen. _Resolved: settled by feel with the tuning panel and written into
    `REPLAY_TIMING` — 10s total, 20ms min interval, 125ms max interval, 3s end hold, 500ms mark
-   fade._
+   fade. The tuning panel was then deleted._
 3. **Skip affordance.** Spec assumes a visible Skip button. Should tapping anywhere on the board also
    skip? (Riskier on mobile — easy to skip by accident.) _Resolved: the Skip button is sufficient;
    tapping the board does nothing. The player mostly plays on mobile, where tap-anywhere would make

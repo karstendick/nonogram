@@ -6,11 +6,9 @@ import { LandingPage } from './components/LandingPage';
 import { PuzzleSelector } from './components/PuzzleSelector';
 import { PuzzleGenerator } from './components/PuzzleGenerator';
 import { SolveReplay } from './components/SolveReplay';
-import { ReplayTuner } from './components/ReplayTuner';
 import { useGameStore } from './store/gameStore';
 import { isGeneratedPuzzle } from './logic/randomPuzzle';
-import { buildReplaySequence, REPLAY_TIMING } from './logic/replay';
-import type { ReplayTiming } from './logic/replay';
+import { buildReplaySequence } from './logic/replay';
 import type { Puzzle } from './types';
 
 // Component to display and copy puzzle seed
@@ -60,7 +58,6 @@ function App() {
   // Replay of the player's solve, shown before the completion modal
   const [replayPhase, setReplayPhase] = useState<'idle' | 'playing' | 'done'>('idle');
   const [forceReplay, setForceReplay] = useState(false);
-  const [timing, setTiming] = useState<ReplayTiming>(REPLAY_TIMING);
   const wasComplete = useRef(isComplete);
 
   const replaySequence = useMemo(
@@ -222,7 +219,6 @@ function App() {
             sequence={replaySequence}
             width={currentPuzzle.width}
             height={currentPuzzle.height}
-            timing={timing}
             forcePlay={forceReplay}
             onFinished={() => setReplayPhase('done')}
           />
@@ -280,11 +276,6 @@ function App() {
           onWatchReplay={startReplay}
           canWatchReplay={replaySequence.length > 0}
         />
-      )}
-
-      {/* Dev-only timing sliders; stripped from production builds */}
-      {import.meta.env.DEV && replaySequence.length > 0 && (
-        <ReplayTuner timing={timing} onChange={setTiming} onReplay={startReplay} />
       )}
     </div>
   );
