@@ -18,11 +18,11 @@ export interface ReplayTiming {
 }
 
 export const REPLAY_TIMING: ReplayTiming = {
-  totalMs: 4000,
+  totalMs: 10000,
   minIntervalMs: 20,
-  maxIntervalMs: 120,
-  holdMs: 600,
-  fadeMs: 180,
+  maxIntervalMs: 125,
+  holdMs: 3000,
+  fadeMs: 500,
 };
 
 // Marks pack into a single number so the persisted log stays small:

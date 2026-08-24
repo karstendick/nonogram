@@ -99,14 +99,15 @@ replayed mark matches the solution by construction.
 
 Total replay duration is capped rather than using a fixed per-cell delay, so a 5×5 and a 15×15 take
 roughly the same time — which matters more now that X-marks roughly double the step count. Per-step
-interval = `clamp(TOTAL_MS / steps, MIN_MS, MAX_MS)` with `TOTAL_MS ≈ 4000`, `MIN_MS ≈ 20`,
-`MAX_MS ≈ 120`.
+interval = `clamp(TOTAL_MS / steps, MIN_MS, MAX_MS)` with `TOTAL_MS = 10000`, `MIN_MS = 20`,
+`MAX_MS = 125` — the values settled with the tuning panel.
 
 The animation is driven by `requestAnimationFrame`, mapping elapsed time to a step index
 (`floor(elapsed / interval)`), not by `setInterval` per cell. This avoids timer drift and correctly
 advances multiple cells in one frame when the interval is below frame time.
 
-After the last cell, hold on the completed picture for ~600ms before handing off to the modal.
+After the last cell, hold on the completed picture for 3s before handing off to the modal. Each
+mark fades in over 500ms, so marks overlap and the picture washes in rather than ticking.
 
 These four numbers — total duration, min interval, max interval, and end hold — plus the per-cell
 fade duration are the animation's entire feel. They live as named constants and are passed into the
@@ -246,9 +247,9 @@ Run `npm run validate` (lint + format check + type-check + unit tests with cover
    yes — the modal gets a "Watch Again" button. Now in scope; see "Re-watching from the completion
    modal"._
 2. **Hold duration and total duration.** ~600ms hold and a ~4s total are starting values; may want
-   tuning once it's on screen. _Resolved: the values stay open on purpose — a dev-only slider panel
-   (see "Dev-only tuning panel") settles them by feel after the animation exists, and the chosen
-   numbers get written back into the constants._
+   tuning once it's on screen. _Resolved: settled by feel with the tuning panel and written into
+   `REPLAY_TIMING` — 10s total, 20ms min interval, 125ms max interval, 3s end hold, 500ms mark
+   fade._
 3. **Skip affordance.** Spec assumes a visible Skip button. Should tapping anywhere on the board also
    skip? (Riskier on mobile — easy to skip by accident.) _Resolved: the Skip button is sufficient;
    tapping the board does nothing. The player mostly plays on mobile, where tap-anywhere would make
