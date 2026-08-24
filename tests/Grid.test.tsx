@@ -141,3 +141,40 @@ describe('Grid - Cell State Constraints', () => {
     expect(store.playerGrid[0][0]).toBe(CellState.Filled);
   });
 });
+
+describe('Grid - Replay Rendering', () => {
+  beforeEach(() => {
+    useGameStore.getState().loadPuzzle(createTestPuzzle());
+  });
+
+  it('draws the supplied grid instead of the player grid', () => {
+    const displayGrid = [
+      [CellState.Filled, CellState.Empty, CellState.MarkedEmpty],
+      [CellState.Empty, CellState.Empty, CellState.Empty],
+      [CellState.Empty, CellState.Empty, CellState.Empty],
+    ];
+
+    render(<Grid displayGrid={displayGrid} interactive={false} />);
+
+    const cells = screen.getAllByRole('gridcell');
+    expect(cells[0].querySelector('div')).not.toBeNull(); // filled
+    expect(cells[2].textContent).toBe('×'); // marked empty
+    expect(useGameStore.getState().playerGrid[0][0]).toBe(CellState.Empty);
+  });
+
+  it('ignores clicks while not interactive', async () => {
+    const user = userEvent.setup();
+    const displayGrid = [
+      [CellState.Empty, CellState.Empty, CellState.Empty],
+      [CellState.Empty, CellState.Empty, CellState.Empty],
+      [CellState.Empty, CellState.Empty, CellState.Empty],
+    ];
+
+    render(<Grid displayGrid={displayGrid} interactive={false} />);
+
+    await user.click(screen.getAllByRole('gridcell')[0]);
+
+    expect(useGameStore.getState().playerGrid[0][0]).toBe(CellState.Empty);
+    expect(useGameStore.getState().moves).toBe(0);
+  });
+});

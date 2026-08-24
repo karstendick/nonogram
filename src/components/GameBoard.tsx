@@ -2,8 +2,15 @@ import { Grid } from './Grid';
 import { useGameStore } from '../store/gameStore';
 import { CellState } from '../types';
 
-export function GameBoard() {
-  const { currentPuzzle, playerGrid, markMultipleCells } = useGameStore();
+interface GameBoardProps {
+  // Replay passes the grid to draw; normal play draws the player's own grid
+  displayGrid?: CellState[][];
+  interactive?: boolean;
+}
+
+export function GameBoard({ displayGrid, interactive = true }: GameBoardProps) {
+  const { currentPuzzle, playerGrid: storeGrid, markMultipleCells } = useGameStore();
+  const playerGrid = displayGrid ?? storeGrid;
 
   if (!currentPuzzle) {
     return <div className="text-gray-600">No puzzle loaded</div>;
@@ -40,7 +47,7 @@ export function GameBoard() {
 
   // Handle clicking a completed row clue
   const handleRowClueClick = (rowIndex: number) => {
-    if (!isRowComplete(rowIndex)) return;
+    if (!interactive || !isRowComplete(rowIndex)) return;
 
     // Find all empty cells in this row
     const cellsToMark = [];
@@ -57,7 +64,7 @@ export function GameBoard() {
 
   // Handle clicking a completed column clue
   const handleColClueClick = (colIndex: number) => {
-    if (!isColComplete(colIndex)) return;
+    if (!interactive || !isColComplete(colIndex)) return;
 
     // Find all empty cells in this column
     const cellsToMark = [];
@@ -110,7 +117,7 @@ export function GameBoard() {
           }}
         >
           {columnClues.map((clues, colIndex) => {
-            const isComplete = isColComplete(colIndex);
+            const isComplete = isColComplete(colIndex) && interactive;
             return (
               <div
                 key={colIndex}
@@ -151,7 +158,7 @@ export function GameBoard() {
         {/* Row clues */}
         <div className="flex flex-col gap-0 shrink-0">
           {rowClues.map((clues, rowIndex) => {
-            const isComplete = isRowComplete(rowIndex);
+            const isComplete = isRowComplete(rowIndex) && interactive;
             return (
               <div
                 key={rowIndex}
@@ -187,7 +194,7 @@ export function GameBoard() {
         </div>
 
         {/* Game grid */}
-        <Grid />
+        <Grid displayGrid={displayGrid} interactive={interactive} />
       </div>
     </div>
   );

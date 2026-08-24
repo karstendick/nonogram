@@ -177,3 +177,40 @@ describe('GameBoard - Clue Clicking', () => {
     expect(updatedStore.playerGrid[0][2]).toBe(CellState.MarkedEmpty);
   });
 });
+
+describe('GameBoard - Replay Rendering', () => {
+  beforeEach(() => {
+    useGameStore.getState().loadPuzzle(createTestPuzzle());
+  });
+
+  it('derives clue completion from the supplied grid', () => {
+    // Row 0 of the solution is complete in this display grid, but the store's
+    // grid is still empty
+    const displayGrid = [
+      [CellState.Filled, CellState.Filled, CellState.Empty],
+      [CellState.Empty, CellState.Empty, CellState.Empty],
+      [CellState.Empty, CellState.Empty, CellState.Empty],
+    ];
+
+    // Baseline: the all-zero row and column clues already read as complete
+    const { rerender } = render(<GameBoard />);
+    const baseline = screen.queryAllByRole('button').length;
+
+    // Filling row 0 completes that row's clue and, with it, column 1's
+    rerender(<GameBoard displayGrid={displayGrid} />);
+    expect(screen.queryAllByRole('button').length).toBe(baseline + 2);
+  });
+
+  it('does not treat clues as buttons while not interactive', () => {
+    const displayGrid = [
+      [CellState.Filled, CellState.Filled, CellState.Empty],
+      [CellState.Filled, CellState.Empty, CellState.Empty],
+      [CellState.Empty, CellState.Empty, CellState.Empty],
+    ];
+
+    render(<GameBoard displayGrid={displayGrid} interactive={false} />);
+
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+    expect(useGameStore.getState().playerGrid[2][0]).toBe(CellState.Empty);
+  });
+});

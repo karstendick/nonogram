@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from '../src/store/gameStore';
+import { decodeMark } from '../src/logic/replay';
 import { CellState } from '../src/types';
 import type { Puzzle } from '../src/types';
 
@@ -418,6 +419,95 @@ describe('GameStore', () => {
         expect(playerGrid[0][1]).toBe(CellState.Filled);
         expect(playerGrid[0][2]).toBe(CellState.Filled);
       });
+    });
+  });
+
+  describe('replay mark log', () => {
+    const decodeLog = () => useGameStore.getState().markLog.map((entry) => decodeMark(entry, 3));
+
+    it('records fills and X-marks in the order they were made', () => {
+      const store = useGameStore.getState();
+
+      store.setCellState(0, 0, CellState.Filled);
+      store.setCellState(0, 2, CellState.MarkedEmpty);
+      store.setCellState(1, 0, CellState.Filled);
+
+      expect(decodeLog()).toEqual([
+        { row: 0, col: 0, state: CellState.Filled },
+        { row: 0, col: 2, state: CellState.MarkedEmpty },
+        { row: 1, col: 0, state: CellState.Filled },
+      ]);
+    });
+
+    it('does not record erases', () => {
+      const store = useGameStore.getState();
+
+      store.setCellState(0, 0, CellState.Filled);
+      store.setCellState(0, 0, CellState.Empty);
+
+      expect(decodeLog()).toEqual([{ row: 0, col: 0, state: CellState.Filled }]);
+    });
+
+    it('records every cell of a drag', () => {
+      const store = useGameStore.getState();
+
+      store.startDrag(0, 0, CellState.Filled);
+      useGameStore.getState().continueDrag(0, 1);
+      useGameStore.getState().endDrag();
+
+      expect(decodeLog()).toEqual([
+        { row: 0, col: 0, state: CellState.Filled },
+        { row: 0, col: 1, state: CellState.Filled },
+      ]);
+    });
+
+    it('records a clue-click batch of X-marks', () => {
+      const store = useGameStore.getState();
+
+      store.markMultipleCells([
+        { row: 2, col: 0, state: CellState.MarkedEmpty },
+        { row: 2, col: 1, state: CellState.MarkedEmpty },
+      ]);
+
+      expect(decodeLog()).toEqual([
+        { row: 2, col: 0, state: CellState.MarkedEmpty },
+        { row: 2, col: 1, state: CellState.MarkedEmpty },
+      ]);
+    });
+
+    it('clears the log when a new puzzle is loaded', () => {
+      const store = useGameStore.getState();
+      store.setCellState(0, 0, CellState.Filled);
+      expect(useGameStore.getState().markLog.length).toBe(1);
+
+      useGameStore.getState().loadPuzzle(createTestPuzzle());
+
+      expect(useGameStore.getState().markLog).toEqual([]);
+    });
+
+    it('persists the log so a solve can span a page reload', () => {
+      useGameStore.getState().setCellState(0, 0, CellState.Filled);
+
+      const persisted = JSON.parse(localStorage.getItem('nonogram-game') ?? '{}') as {
+        state: { markLog: number[] };
+      };
+      expect(persisted.state.markLog).toEqual(useGameStore.getState().markLog);
+    });
+
+    it('defaults to an empty log when rehydrating a save from before the feature', async () => {
+      const { currentPuzzle, playerGrid } = useGameStore.getState();
+      localStorage.setItem(
+        'nonogram-game',
+        JSON.stringify({
+          state: { currentPuzzle, playerGrid, moves: 3, isComplete: false },
+          version: 0,
+        })
+      );
+
+      await useGameStore.persist.rehydrate();
+
+      expect(useGameStore.getState().markLog).toEqual([]);
+      expect(useGameStore.getState().moves).toBe(3);
     });
   });
 });

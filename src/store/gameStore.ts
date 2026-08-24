@@ -1,6 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { CellState, InteractionMode, type Puzzle } from '../types';
+import { encodeMark } from '../logic/replay';
+
+// Append a mark to the replay log. Erases contribute nothing to a replay, so
+// only fills and X-marks are recorded.
+const recordMark = (
+  markLog: number[],
+  width: number,
+  row: number,
+  col: number,
+  state: CellState
+): number[] =>
+  state === CellState.Empty ? markLog : [...markLog, encodeMark(row, col, width, state)];
 
 interface GameStore {
   // Current puzzle state
@@ -9,6 +21,8 @@ interface GameStore {
   currentMode: InteractionMode;
   moves: number;
   isComplete: boolean;
+  // Append-only log of every fill and X-mark, in the order the player made them
+  markLog: number[];
 
   // Drag state
   isDragging: boolean;
@@ -40,6 +54,7 @@ export const useGameStore = create<GameStore>()(
       currentMode: InteractionMode.Fill,
       moves: 0,
       isComplete: false,
+      markLog: [],
 
       // Drag state
       isDragging: false,
@@ -60,6 +75,7 @@ export const useGameStore = create<GameStore>()(
           playerGrid: emptyGrid,
           moves: 0,
           isComplete: false,
+          markLog: [],
           // Reset drag state when loading a new puzzle
           isDragging: false,
           dragStartRow: null,
@@ -72,7 +88,7 @@ export const useGameStore = create<GameStore>()(
 
       // Set cell state
       setCellState: (row: number, col: number, state: CellState) => {
-        const { playerGrid, currentPuzzle } = get();
+        const { playerGrid, currentPuzzle, markLog } = get();
 
         if (!currentPuzzle) return;
 
@@ -84,6 +100,7 @@ export const useGameStore = create<GameStore>()(
         set({
           playerGrid: newGrid,
           moves: get().moves + 1,
+          markLog: recordMark(markLog, currentPuzzle.width, row, col, state),
         });
 
         // Check if puzzle is complete after this move
@@ -92,19 +109,22 @@ export const useGameStore = create<GameStore>()(
 
       // Mark multiple cells at once
       markMultipleCells: (cells: Array<{ row: number; col: number; state: CellState }>) => {
-        const { playerGrid, currentPuzzle } = get();
+        const { playerGrid, currentPuzzle, markLog } = get();
 
         if (!currentPuzzle || cells.length === 0) return;
 
         // Create new grid with all updated cells
         const newGrid = playerGrid.map((row) => [...row]);
+        let newMarkLog = markLog;
         cells.forEach(({ row, col, state }) => {
           newGrid[row][col] = state;
+          newMarkLog = recordMark(newMarkLog, currentPuzzle.width, row, col, state);
         });
 
         set({
           playerGrid: newGrid,
           moves: get().moves + 1,
+          markLog: newMarkLog,
         });
 
         // Check if puzzle is complete after this move
@@ -147,7 +167,7 @@ export const useGameStore = create<GameStore>()(
 
       // Start a drag operation
       startDrag: (row: number, col: number, action: CellState) => {
-        const { playerGrid, currentPuzzle } = get();
+        const { playerGrid, currentPuzzle, markLog } = get();
         if (!currentPuzzle) return;
 
         // Check if we can apply this action to the starting cell
@@ -172,6 +192,7 @@ export const useGameStore = create<GameStore>()(
 
         set({
           playerGrid: newGrid,
+          markLog: recordMark(markLog, currentPuzzle.width, row, col, action),
           isDragging: true,
           dragStartRow: row,
           dragStartCol: col,
@@ -192,6 +213,7 @@ export const useGameStore = create<GameStore>()(
           draggedCells,
           playerGrid,
           currentPuzzle,
+          markLog,
         } = get();
 
         if (
@@ -258,6 +280,7 @@ export const useGameStore = create<GameStore>()(
 
         set({
           playerGrid: newGrid,
+          markLog: recordMark(markLog, currentPuzzle.width, row, col, dragAction),
           dragAxis: newAxis,
           draggedCells: newDraggedCells,
         });
@@ -288,12 +311,20 @@ export const useGameStore = create<GameStore>()(
     }),
     {
       name: 'nonogram-game',
+      // Saves written before the replay feature have no markLog; default it so
+      // a puzzle finished from one of those simply has nothing to replay.
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as Partial<GameStore>),
+        markLog: (persisted as Partial<GameStore>)?.markLog ?? [],
+      }),
       partialize: (state) => ({
         currentPuzzle: state.currentPuzzle,
         playerGrid: state.playerGrid,
         currentMode: state.currentMode,
         moves: state.moves,
         isComplete: state.isComplete,
+        markLog: state.markLog,
       }),
     }
   )

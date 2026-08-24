@@ -6,9 +6,18 @@ import type { Puzzle } from '../types';
 interface CompletionModalProps {
   onBackToSelection: () => void;
   onPlayAnother: (puzzle: Puzzle) => void;
+  onWatchReplay: () => void;
+  // False when there's nothing to watch: an empty log, or a save from before
+  // the replay feature shipped
+  canWatchReplay: boolean;
 }
 
-export function CompletionModal({ onBackToSelection, onPlayAnother }: CompletionModalProps) {
+export function CompletionModal({
+  onBackToSelection,
+  onPlayAnother,
+  onWatchReplay,
+  canWatchReplay,
+}: CompletionModalProps) {
   const { isComplete, moves, currentPuzzle } = useGameStore();
   const [isAdmiring, setIsAdmiring] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -69,6 +78,15 @@ export function CompletionModal({ onBackToSelection, onPlayAnother }: Completion
               }`}
             >
               {isGenerating ? 'Generating...' : `Play Another ${size}×${size}`}
+            </button>
+          )}
+          {canWatchReplay && (
+            <button
+              onClick={onWatchReplay}
+              disabled={isGenerating}
+              className="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+            >
+              Watch Again
             </button>
           )}
           <button
