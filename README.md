@@ -109,6 +109,21 @@ Slashes in branch names are converted to hyphens, so `feature/drag` is deployed 
 "Deploy Preview" run. Previews are deleted automatically when the branch is deleted
 (including on PR merge).
 
+**Previews do not cache.** Previews live under `/nonogram/preview/`, which is inside the
+production service worker's `/nonogram/` scope, so the two would otherwise fight: the
+production worker would answer preview navigations from its own precache and serve a
+stale app under a preview URL. Two settings in [vite.config.ts](vite.config.ts) keep
+them apart — the production worker has a `navigateFallbackDenylist` for `/preview/`, and
+preview builds use `selfDestroying`, which ships a service worker whose only job is to
+unregister itself and delete its caches. Deleting the file instead would not be enough:
+a device that already registered a preview worker keeps it, so previews need a worker
+that actively cleans up ([Workbox guidance on removing a service
+worker](https://developer.chrome.com/docs/workbox/remove-buggy-service-workers)).
+
+A consequence is that previews are not installable and have no offline support, so PWA
+behavior itself can only be reviewed on production or from a local `npm run build &&
+npm run preview`.
+
 ### Notes
 
 - Deploys are gated on CI passing — they use `workflow_run` rather than running in the
