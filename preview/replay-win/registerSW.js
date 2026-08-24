@@ -1,1 +1,0 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/nonogram/preview/replay-win/sw.js', { scope: '/nonogram/preview/replay-win/' })})}
