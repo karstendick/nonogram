@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { DEFAULT_LEVEL_ID } from '../logic/generation/levels';
 import { CellState, InteractionMode, type Puzzle } from '../types';
 import { encodeMark } from '../logic/replay';
 
@@ -23,6 +24,13 @@ interface GameStore {
   isComplete: boolean;
   // Append-only log of every fill and X-mark, in the order the player made them
   markLog: number[];
+  /**
+   * The difficulty level last played. Persisted so the app can start generating
+   * the next puzzle before being asked: players pick the same level over and
+   * over, which makes it a very good guess, and a wrong one costs only some
+   * background work.
+   */
+  lastLevelId: number;
 
   // Drag state
   isDragging: boolean;
@@ -38,6 +46,8 @@ interface GameStore {
   markMultipleCells: (cells: Array<{ row: number; col: number; state: CellState }>) => void;
   setMode: (mode: InteractionMode) => void;
   checkSolution: () => boolean;
+
+  setLastLevelId: (levelId: number) => void;
 
   // Drag actions
   startDrag: (row: number, col: number, action: CellState) => void;
@@ -55,6 +65,7 @@ export const useGameStore = create<GameStore>()(
       moves: 0,
       isComplete: false,
       markLog: [],
+      lastLevelId: DEFAULT_LEVEL_ID,
 
       // Drag state
       isDragging: false,
@@ -132,6 +143,10 @@ export const useGameStore = create<GameStore>()(
       },
 
       // Set interaction mode (for mobile)
+      setLastLevelId: (levelId: number) => {
+        set({ lastLevelId: levelId });
+      },
+
       setMode: (mode: InteractionMode) => {
         set({ currentMode: mode });
       },
@@ -317,8 +332,10 @@ export const useGameStore = create<GameStore>()(
         ...current,
         ...(persisted as Partial<GameStore>),
         markLog: (persisted as Partial<GameStore>)?.markLog ?? [],
+        lastLevelId: (persisted as Partial<GameStore>)?.lastLevelId ?? DEFAULT_LEVEL_ID,
       }),
       partialize: (state) => ({
+        lastLevelId: state.lastLevelId,
         currentPuzzle: state.currentPuzzle,
         playerGrid: state.playerGrid,
         currentMode: state.currentMode,

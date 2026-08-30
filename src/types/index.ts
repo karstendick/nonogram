@@ -1,11 +1,4 @@
-import { DifficultyRating } from '../logic/difficulty/types';
-
-// Puzzle difficulty rating
-export enum Difficulty {
-  Easy = 'easy',
-  Medium = 'medium',
-  Hard = 'hard',
-}
+import { StoredRating } from '../logic/difficulty/types';
 
 // Internal solver cell state (separate from UI CellState)
 export enum SolverCell {
@@ -18,7 +11,13 @@ export enum SolverCell {
 export interface PuzzleData {
   id: string;
   title: string;
-  difficulty: Difficulty;
+  /**
+   * Precomputed by `npm run rate-premades`. These puzzles never change, so
+   * their ratings are constants; computing them at load would be recomputing a
+   * constant during the idle period speculative generation wants. A test keeps
+   * the stored values honest.
+   */
+  rating: StoredRating;
   solution: string[]; // Human-readable format (# = filled, . = empty)
 }
 
@@ -27,14 +26,11 @@ export interface Puzzle {
   id: string;
   title: string;
   /**
-   * Legacy single-tier label, carried by premade puzzles and the original
-   * generator. Being replaced by `rating`, which measures difficulty on two
-   * independent axes; what the tiers should be called is deliberately still
-   * open, so nothing maps `rating` back onto this yet.
+   * Measured difficulty on two independent axes. Nothing maps this back onto a
+   * single named tier: how many tiers there should be and what to call them is
+   * deliberately still open, pending real play experience.
    */
-  difficulty?: Difficulty;
-  /** Two-axis measured difficulty, on puzzles that have been rated. */
-  rating?: DifficultyRating;
+  rating?: StoredRating;
   width: number;
   height: number;
   solution: boolean[][]; // Parsed from string[] (true = filled, false = empty)

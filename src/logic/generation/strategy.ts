@@ -48,6 +48,12 @@ export interface GenerationOptions {
   useAmbiguityFilter: boolean;
   /** Allow depth-1 search, without which the hardest tier is unreachable. */
   allowDepth1: boolean;
+  /**
+   * Called as candidates are tried, so a waiting player can be shown what is
+   * actually happening rather than a spinner. Generation runs in a worker, so
+   * this is what the worker turns into progress messages.
+   */
+  onProgress?: (stats: GenerationStats) => void;
 }
 
 export const DEFAULT_OPTIONS: GenerationOptions = {
@@ -55,6 +61,9 @@ export const DEFAULT_OPTIONS: GenerationOptions = {
   useAmbiguityFilter: true,
   allowDepth1: true,
 };
+
+/** How often to report progress, in candidates. */
+export const PROGRESS_INTERVAL = 8;
 
 export type GenerationStrategy = (
   target: DifficultyTarget,

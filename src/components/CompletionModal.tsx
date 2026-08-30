@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { generateRandomPuzzle, isGeneratedPuzzle } from '../logic/randomPuzzle';
+import { isGeneratedPuzzle } from '../logic/randomPuzzle';
+import { generationService } from '../logic/generation/service';
 import type { Puzzle } from '../types';
 
 interface CompletionModalProps {
@@ -18,7 +19,7 @@ export function CompletionModal({
   onWatchReplay,
   canWatchReplay,
 }: CompletionModalProps) {
-  const { isComplete, moves, currentPuzzle } = useGameStore();
+  const { isComplete, moves, currentPuzzle, lastLevelId } = useGameStore();
   const [isAdmiring, setIsAdmiring] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -26,28 +27,22 @@ export function CompletionModal({
 
   // Only generated puzzles can be re-rolled — pre-made puzzles have no "more like this"
   const canPlayAnother = isGeneratedPuzzle(currentPuzzle);
-  const size = currentPuzzle?.width ?? 0;
 
   const handleAdmire = () => {
     setIsAdmiring(true);
   };
 
+  /**
+   * This is the moment background generation is for: the next puzzle has been
+   * generating in a worker since the last one was handed out, so "Play Another"
+   * usually returns instantly rather than making the player wait again.
+   */
   const handlePlayAnother = () => {
     setIsGenerating(true);
-
-    // Run generation in a timeout to allow UI to update
-    setTimeout(() => {
-      const puzzle = generateRandomPuzzle(size);
-
+    void generationService.take(lastLevelId).then((result) => {
       setIsGenerating(false);
-
-      if (puzzle) {
-        onPlayAnother(puzzle);
-      } else {
-        // Retry if every seed we tried failed to produce a valid puzzle
-        handlePlayAnother();
-      }
-    }, 10);
+      if (result) onPlayAnother(result.puzzle);
+    });
   };
 
   return (
@@ -77,7 +72,7 @@ export function CompletionModal({
                   : 'bg-purple-600 text-white hover:bg-purple-700'
               }`}
             >
-              {isGenerating ? 'Generating...' : `Play Another ${size}×${size}`}
+              {isGenerating ? 'Generating…' : `Play Another (level ${lastLevelId})`}
             </button>
           )}
           {canWatchReplay && (

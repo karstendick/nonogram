@@ -1,40 +1,15 @@
-import { CellState, Difficulty, SolverCell } from '../types';
+import { SolverCell } from '../types';
 import _ from 'lodash';
 
 /**
- * Convert SolverCell to CellState
+ * Placement enumeration for a single line.
+ *
+ * This is the strongest thing that can be said about a line: intersect every
+ * placement still consistent with what is known. It is deliberately NOT used to
+ * measure difficulty — a solver this strong cannot tell an obvious deduction
+ * from a fiendish one, which is why the technique ladder in logic/difficulty
+ * exists. Here it serves as that ladder's top rung and last resort.
  */
-function toCellState(cell: SolverCell): CellState {
-  switch (cell) {
-    case SolverCell.Empty:
-      return CellState.Empty;
-    case SolverCell.Filled:
-      return CellState.Filled;
-    case SolverCell.Unknown:
-      return CellState.Empty; // Default to empty for output (shouldn't happen in valid solutions)
-  }
-}
-
-/**
- * Result of solving a puzzle
- */
-export interface SolverResult {
-  solved: boolean; // Puzzle was completed
-  unique: boolean; // Has exactly one solution
-  difficulty?: Difficulty; // Only set if solved
-  passes: number; // Number of solving passes required
-  grid?: CellState[][]; // Final grid state (if solved)
-}
-
-/**
- * Input for puzzle solver
- */
-export interface PuzzleInput {
-  rowClues: number[][];
-  columnClues: number[][];
-  width: number;
-  height: number;
-}
 
 /**
  * Generate all possible placements of blocks for given clues in an array
@@ -149,102 +124,4 @@ export function solveArray(clues: number[], knownCells: SolverCell[]): SolverCel
   }
 
   return result;
-}
-
-/**
- * Count unknown cells in a grid
- */
-function countUnknown(grid: SolverCell[][]): number {
-  return _.sumBy(grid, (row) => _.sumBy(row, (cell) => (cell === SolverCell.Unknown ? 1 : 0)));
-}
-
-/**
- * Solve a puzzle using logical deduction only (no guessing)
- * @param puzzle Puzzle input with clues and dimensions
- * @returns Solver result with completion status and difficulty
- */
-export function solvePuzzle(puzzle: PuzzleInput): SolverResult {
-  const { rowClues, columnClues, width, height } = puzzle;
-
-  // Initialize grid with unknown cells
-  const grid: SolverCell[][] = Array.from({ length: height }, () =>
-    Array<SolverCell>(width).fill(SolverCell.Unknown)
-  );
-
-  let pass = 0;
-  const maxPasses = 100; // Prevent infinite loops
-
-  while (pass < maxPasses) {
-    let madeProgress = false;
-    pass++;
-
-    // Solve all rows
-    for (let r = 0; r < height; r++) {
-      const before = [...grid[r]];
-      grid[r] = solveArray(rowClues[r], grid[r]);
-
-      if (!_.isEqual(grid[r], before)) {
-        madeProgress = true;
-      }
-    }
-
-    // Solve all columns
-    for (let c = 0; c < width; c++) {
-      const column = grid.map((row) => row[c]);
-      const before = [...column];
-      const solved = solveArray(columnClues[c], column);
-
-      if (!_.isEqual(solved, before)) {
-        madeProgress = true;
-      }
-
-      // Update grid with solved column
-      for (let r = 0; r < height; r++) {
-        grid[r][c] = solved[r];
-      }
-    }
-
-    // Check if puzzle is complete
-    const unknownCount = countUnknown(grid);
-    if (unknownCount === 0) {
-      // Puzzle is solved! Convert to CellState for output
-      const cellStateGrid = grid.map((row) => row.map((cell) => toCellState(cell)));
-      return {
-        solved: true,
-        unique: true, // Assumed unique if solved with pure logic
-        difficulty: rateDifficulty(pass),
-        passes: pass,
-        grid: cellStateGrid,
-      };
-    }
-
-    if (!madeProgress) {
-      // Stuck - puzzle requires guessing
-      const cellStateGrid = grid.map((row) => row.map((cell) => toCellState(cell)));
-      return {
-        solved: false,
-        unique: false,
-        passes: pass,
-        grid: cellStateGrid,
-      };
-    }
-  }
-
-  // Exceeded max passes
-  const cellStateGrid = grid.map((row) => row.map((cell) => toCellState(cell)));
-  return {
-    solved: false,
-    unique: false,
-    passes: maxPasses,
-    grid: cellStateGrid,
-  };
-}
-
-/**
- * Rate puzzle difficulty based on number of solving passes
- */
-function rateDifficulty(passes: number): Difficulty {
-  if (passes <= 3) return Difficulty.Easy;
-  if (passes <= 10) return Difficulty.Medium;
-  return Difficulty.Hard;
 }

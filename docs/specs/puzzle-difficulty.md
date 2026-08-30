@@ -818,6 +818,41 @@ region. Band definitions now come from the calibration run. Any future change to
 the ladder or the scoring function invalidates them, which is what the
 calibration script exists to catch.
 
+### Phase 3: shipping it
+
+**Levels are numbered, not named.** The UI has to offer difficulty somehow, but
+what the tiers should be called is deferred until there is play experience —
+and shipping is how that experience gets made. Numbers are ordinal without
+claiming how a puzzle feels, and each level shows a short neutral hint
+("Steady going, few dead ends"). The puzzle's own measured rating is shown once
+it exists, on both axes, so the bands can be judged against real puzzles.
+
+**Cancellation is by `terminate()`, not a cooperative flag.** The spec argued
+for cooperative cancellation so partial work could be handed over. Working
+through it, that case does not exist: the only time generation is cancelled is
+when the player changed level, and the partial work is then for the wrong target
+and worth nothing. When the level _matches_, nothing is cancelled — the request
+joins the in-flight job instead. A synchronous loop could not observe a cancel
+message anyway.
+
+**Difficulty is now part of a puzzle's identity.** With difficulty as a
+generation input, `(seed, size, level)` determines the puzzle — the same seed at
+another level is a different puzzle. The generator also had to be made to return
+the puzzle under the seed it was _asked_ for rather than whichever internal
+candidate seed won, or shared links would stop reproducing.
+
+**The premades' ratings validate the two-axis design.** `flower` needs the
+hardest rung on the ladder but almost no work; `house` is heavy work at a low
+rung. A single number would have described both wrongly, which is the case the
+two axes exist for. A test asserts the two axes do not rank the puzzles
+identically — if they ever did, the second axis would be carrying no information
+and the design would not be earning its keep.
+
+**Generation tests cannot run in parallel.** Four browsers each driving a worker
+doing CPU-heavy generation starve one another badly enough to look like a hang:
+the same tests take 30s+ and time out in parallel, and about 3s sequentially.
+The e2e file is marked to run its tests in order.
+
 ### Two bugs the tests caught, worth keeping tests on
 
 - **Completed lines went unvalidated.** Both solvers skipped lines with no

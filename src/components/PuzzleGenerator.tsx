@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { generatePuzzle } from '../logic/puzzleGenerator';
+import { LevelSelector } from './LevelSelector';
+import { DEFAULT_LEVEL_ID } from '../logic/generation/levels';
 import { Puzzle } from '../types';
 
 interface PuzzleGeneratorProps {
@@ -8,7 +10,10 @@ interface PuzzleGeneratorProps {
 
 export function PuzzleGenerator({ onPuzzleGenerated }: PuzzleGeneratorProps) {
   const [seed, setSeed] = useState('');
-  const [size, setSize] = useState<5 | 10 | 15>(10);
+  const [size, setSize] = useState<5 | 10 | 15>(15);
+  // Difficulty is a generation input now, so a shared puzzle is identified by
+  // seed, size AND level: the same seed at another level is a different puzzle.
+  const [levelId, setLevelId] = useState(DEFAULT_LEVEL_ID);
   const [status, setStatus] = useState<'ready' | 'generating' | 'success' | 'failed'>('ready');
   const [error, setError] = useState<string | null>(null);
 
@@ -24,14 +29,14 @@ export function PuzzleGenerator({ onPuzzleGenerated }: PuzzleGeneratorProps) {
     // Run generation in a timeout to allow UI to update
     void setTimeout(() => {
       try {
-        const puzzle = generatePuzzle(size, seed.trim());
+        const puzzle = generatePuzzle(size, seed.trim(), levelId);
 
         if (puzzle) {
           setStatus('success');
           onPuzzleGenerated(puzzle);
         } else {
           setStatus('failed');
-          setError(`Failed to generate a valid puzzle after 100 attempts. Try a different seed.`);
+          setError('Could not find a puzzle for that seed and level. Try another seed or level.');
         }
       } catch (err) {
         setStatus('failed');
@@ -68,6 +73,11 @@ export function PuzzleGenerator({ onPuzzleGenerated }: PuzzleGeneratorProps) {
           disabled={status === 'generating'}
         />
         <p className="mt-1 text-xs text-gray-500">Enter any text to use as a seed for generation</p>
+      </div>
+
+      {/* Difficulty selector */}
+      <div className="mb-6">
+        <LevelSelector value={levelId} onChange={setLevelId} disabled={status === 'generating'} />
       </div>
 
       {/* Size selector */}

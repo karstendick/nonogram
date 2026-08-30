@@ -9,6 +9,7 @@ import {
   GenerationResult,
   GenerationStats,
   GenerationStrategy,
+  PROGRESS_INTERVAL,
   distanceToTarget,
   emptyStats,
   inTarget,
@@ -63,12 +64,16 @@ function finish(
   best: BestSoFar,
   target: DifficultyTarget,
   stats: GenerationStats,
-  startedAt: number
+  startedAt: number,
+  seed: string
 ): GenerationResult {
   stats.elapsedMs = Date.now() - startedAt;
   const candidate = best.value;
   return {
-    puzzle: candidate?.puzzle ?? null,
+    // The puzzle is identified by the seed it was asked for, not by whichever
+    // candidate seed happened to win. Puzzles are shared by seed, so this is
+    // what makes a shared link reproduce the same puzzle.
+    puzzle: candidate ? { ...candidate.puzzle, id: seed } : null,
     rating: candidate?.rating ?? null,
     inBand: candidate ? inTarget(candidate.rating, target) : false,
     stats,
@@ -91,11 +96,12 @@ export const g1RejectionSampling: GenerationStrategy = (target, seed, options) =
 
   for (let i = 0; Date.now() - startedAt < opts.budgetMs; i++) {
     const candidate = drawCandidate(target.size, `${seed}-${i}`, undefined, opts, stats);
+    if (stats.candidates % PROGRESS_INTERVAL === 0) opts.onProgress?.(stats);
     if (!candidate) continue;
     if (best.offer(candidate, target)) break;
     stats.rejectedOffTarget++;
   }
-  return finish(best, target, stats, startedAt);
+  return finish(best, target, stats, startedAt, seed);
 };
 
 /**
@@ -111,11 +117,12 @@ export const g2KnobBiased: GenerationStrategy = (target, seed, options) => {
 
   for (let i = 0; Date.now() - startedAt < opts.budgetMs; i++) {
     const candidate = drawCandidate(target.size, `${seed}-${i}`, params, opts, stats);
+    if (stats.candidates % PROGRESS_INTERVAL === 0) opts.onProgress?.(stats);
     if (!candidate) continue;
     if (best.offer(candidate, target)) break;
     stats.rejectedOffTarget++;
   }
-  return finish(best, target, stats, startedAt);
+  return finish(best, target, stats, startedAt, seed);
 };
 
 /**
@@ -139,6 +146,7 @@ export const g3HillClimbing: GenerationStrategy = (target, seed, options) => {
 
   while (Date.now() - startedAt < opts.budgetMs) {
     const candidate = evaluatePattern(current, `${seed}-${generation}`, opts, stats);
+    if (stats.candidates % PROGRESS_INTERVAL === 0) opts.onProgress?.(stats);
     if (candidate) {
       const distance = distanceToTarget(candidate.rating, target);
       if (best.offer(candidate, target)) break;
@@ -155,7 +163,7 @@ export const g3HillClimbing: GenerationStrategy = (target, seed, options) => {
       currentDistance = Infinity;
     }
   }
-  return finish(best, target, stats, startedAt);
+  return finish(best, target, stats, startedAt, seed);
 };
 
 function mutate(pattern: boolean[][], random: seedrandom.PRNG, size: number): boolean[][] {
@@ -220,11 +228,12 @@ export const g9Opportunistic: GenerationStrategy = (target, seed, options) => {
 
   for (let i = 0; Date.now() - startedAt < opts.budgetMs; i++) {
     const candidate = drawCandidate(target.size, `${seed}-${i}`, OPPORTUNISTIC_PARAMS, opts, stats);
+    if (stats.candidates % PROGRESS_INTERVAL === 0) opts.onProgress?.(stats);
     if (!candidate) continue;
     if (best.offer(candidate, target)) break;
     stats.rejectedOffTarget++;
   }
-  return finish(best, target, stats, startedAt);
+  return finish(best, target, stats, startedAt, seed);
 };
 
 export const STRATEGIES: { name: string; run: GenerationStrategy }[] = [
@@ -234,3 +243,14 @@ export const STRATEGIES: { name: string; run: GenerationStrategy }[] = [
   { name: 'G5 hybrid', run: g5Hybrid },
   { name: 'G9 opportunistic', run: g9Opportunistic },
 ];
+
+/**
+ * The strategy the app ships with.
+ *
+ * G2 won the bake-off outright: a 100% hit rate in every band, the fastest or
+ * near-fastest time in each, and the fewest candidates burned. G5 is G2 plus a
+ * fallback that never fires, G3 was the worst measured, and G9 — a strong
+ * second — is better suited to filling buffers in the background than to
+ * answering a request for a specific difficulty.
+ */
+export const generateForTarget: GenerationStrategy = g2KnobBiased;

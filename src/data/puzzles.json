@@ -3,37 +3,56 @@
     {
       "id": "heart",
       "title": "Heart",
-      "difficulty": "easy",
-      "solution": [".##.##.", "#######", "#######", ".#####.", "..###..", "...#...", "......."]
+      "solution": [".##.##.", "#######", "#######", ".#####.", "..###..", "...#...", "......."],
+      "rating": {
+        "technique": 28,
+        "work": 39,
+        "maxTechnique": 3
+      }
     },
     {
       "id": "house",
       "title": "House",
-      "difficulty": "easy",
-      "solution": ["..#..", ".###.", "#####", "#...#", "#...#"]
+      "solution": ["..#..", ".###.", "#####", "#...#", "#...#"],
+      "rating": {
+        "technique": 44,
+        "work": 88,
+        "maxTechnique": 5
+      }
     },
     {
       "id": "tree",
       "title": "Tree",
-      "difficulty": "easy",
-      "solution": ["..#..", ".###.", "#####", "..#..", "..#.."]
+      "solution": ["..#..", ".###.", "#####", "..#..", "..#.."],
+      "rating": {
+        "technique": 28,
+        "work": 21,
+        "maxTechnique": 3
+      }
     },
     {
       "id": "cross",
       "title": "Cross",
-      "difficulty": "easy",
-      "solution": ["..#..", "..#..", "#####", "..#..", "..#.."]
+      "solution": ["..#..", "..#..", "#####", "..#..", "..#.."],
+      "rating": {
+        "technique": 28,
+        "work": 29,
+        "maxTechnique": 3
+      }
     },
     {
       "id": "diamond",
       "title": "Diamond",
-      "difficulty": "easy",
-      "solution": ["..#..", ".###.", "#####", ".###.", "..#.."]
+      "solution": ["..#..", ".###.", "#####", ".###.", "..#.."],
+      "rating": {
+        "technique": 44,
+        "work": 29,
+        "maxTechnique": 5
+      }
     },
     {
       "id": "sailboat",
       "title": "Sailboat",
-      "difficulty": "medium",
       "solution": [
         "....#.....",
         "...###....",
@@ -45,12 +64,16 @@
         "...###....",
         "....#.....",
         ".........#"
-      ]
+      ],
+      "rating": {
+        "technique": 78,
+        "work": 38,
+        "maxTechnique": 7
+      }
     },
     {
       "id": "star",
       "title": "Star",
-      "difficulty": "medium",
       "solution": [
         "....#.....",
         "...###....",
@@ -62,12 +85,16 @@
         "..#...#...",
         "..........",
         ".........."
-      ]
+      ],
+      "rating": {
+        "technique": 44,
+        "work": 25,
+        "maxTechnique": 5
+      }
     },
     {
       "id": "cat",
       "title": "Cat",
-      "difficulty": "medium",
       "solution": [
         "#........#",
         "##......##",
@@ -79,12 +106,16 @@
         ".#......#.",
         "..........",
         ".........."
-      ]
+      ],
+      "rating": {
+        "technique": 78,
+        "work": 29,
+        "maxTechnique": 7
+      }
     },
     {
       "id": "flower",
       "title": "Flower",
-      "difficulty": "hard",
       "solution": [
         ".....#...#.....",
         "....###.###....",
@@ -101,12 +132,16 @@
         "......###......",
         ".....#####.....",
         "....#######...."
-      ]
+      ],
+      "rating": {
+        "technique": 100,
+        "work": 0,
+        "maxTechnique": 8
+      }
     },
     {
       "id": "chess-knight",
       "title": "Chess Knight",
-      "difficulty": "hard",
       "solution": [
         "....#####......",
         "...#######.....",
@@ -123,7 +158,12 @@
         ".....####......",
         "......##.......",
         "..............."
-      ]
+      ],
+      "rating": {
+        "technique": 100,
+        "work": 50,
+        "maxTechnique": 8
+      }
     }
   ]
 }

@@ -24,7 +24,7 @@ export function parsePuzzle(data: PuzzleData): Puzzle {
   return {
     id: data.id,
     title: data.title,
-    difficulty: data.difficulty,
+    rating: data.rating,
     width,
     height,
     solution,

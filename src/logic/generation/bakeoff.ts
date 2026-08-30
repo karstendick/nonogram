@@ -1,6 +1,7 @@
 import { STRATEGIES } from './strategies';
 import { DifficultyTarget, GenerationOptions } from './strategy';
 import { Technique } from '../difficulty/types';
+import { LEVELS } from './levels';
 
 /**
  * The bake-off: race every strategy against every target and report what
@@ -44,23 +45,10 @@ export interface Summary {
 }
 
 /**
- * Target bands over the two axes.
- *
- * Cut from what `npm run calibrate` actually measures at 15x15 — technique
- * spanning 36 to 100 with a median of 78, work spanning 15 to 86 — rather than
- * guessed. Bands set by guesswork made the first bake-off measure nothing but
- * their own unreachability.
- *
- * Deliberately unnamed: what the tiers should be called is deferred until there
- * is real play experience across a spread of scores, and nothing here needs
- * names to work.
+ * The bands the bake-off races over: the same levels the product offers, so the
+ * measurements describe what players will actually get.
  */
-export const BANDS: DifficultyTarget[] = [
-  { size: 15, technique: { min: 0, max: 60 }, work: { min: 0, max: 45 } },
-  { size: 15, technique: { min: 40, max: 78 }, work: { min: 30, max: 60 } },
-  { size: 15, technique: { min: 60, max: 100 }, work: { min: 50, max: 90 } },
-  { size: 15, technique: { min: 95, max: 100 }, work: { min: 20, max: 100 } },
-];
+export const BANDS: DifficultyTarget[] = LEVELS.map((level) => level.target);
 
 export function bandName(target: DifficultyTarget): string {
   return `tech ${target.technique.min}-${target.technique.max} / work ${target.work.min}-${target.work.max}`;

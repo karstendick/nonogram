@@ -126,3 +126,15 @@ export interface DifficultyRating {
   bottleneckSteps: number;
   techniqueCounts: Record<Technique, number>;
 }
+
+/**
+ * The part of a rating worth storing in puzzles.json.
+ *
+ * Only what the UI displays: the raw measurements a rating carries are for
+ * calibration, and recomputing them is cheap when they are actually wanted.
+ */
+export interface StoredRating {
+  technique: number;
+  work: number;
+  maxTechnique: Technique;
+}

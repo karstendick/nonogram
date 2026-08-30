@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { generatePuzzle } from './puzzleGenerator';
-import { Difficulty } from '../types';
 
 describe('puzzleGenerator', () => {
   it('should generate a valid 5x5 puzzle with a given seed', () => {
@@ -15,7 +14,9 @@ describe('puzzleGenerator', () => {
       expect(puzzle.solution[0]).toHaveLength(5);
       expect(puzzle.rowClues).toHaveLength(5);
       expect(puzzle.columnClues).toHaveLength(5);
-      expect([Difficulty.Easy, Difficulty.Medium, Difficulty.Hard]).toContain(puzzle.difficulty);
+      expect(puzzle.rating).toBeDefined();
+      expect(puzzle.rating!.technique).toBeGreaterThanOrEqual(0);
+      expect(puzzle.rating!.work).toBeGreaterThanOrEqual(0);
     }
   });
 

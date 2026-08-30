@@ -9,6 +9,7 @@ import { SolveReplay } from './components/SolveReplay';
 import { useGameStore } from './store/gameStore';
 import { isGeneratedPuzzle } from './logic/randomPuzzle';
 import { buildReplaySequence } from './logic/replay';
+import { RatingBadge } from './components/RatingBadge';
 import type { Puzzle } from './types';
 
 // Component to display and copy puzzle seed
@@ -170,8 +171,11 @@ function App() {
               ← Back
             </button>
             {currentPuzzle && (
-              <div className="text-xs text-gray-600">
-                {currentPuzzle.width} × {currentPuzzle.height}
+              <div className="text-xs text-gray-600 text-right">
+                <div>
+                  {currentPuzzle.width} × {currentPuzzle.height}
+                </div>
+                <RatingBadge rating={currentPuzzle.rating} className="text-[10px] leading-tight" />
               </div>
             )}
           </div>
@@ -190,7 +194,7 @@ function App() {
               <div className="text-sm sm:text-base text-gray-600">
                 <span className="font-semibold">{currentPuzzle.title}</span>
                 <span className="mx-2">•</span>
-                <span className="capitalize">{currentPuzzle.difficulty}</span>
+                <RatingBadge rating={currentPuzzle.rating} />
                 <span className="mx-2">•</span>
                 <span>
                   {currentPuzzle.width} × {currentPuzzle.height}
