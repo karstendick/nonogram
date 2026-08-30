@@ -1,3 +1,5 @@
+import { DifficultyRating } from '../logic/difficulty/types';
+
 // Puzzle difficulty rating
 export enum Difficulty {
   Easy = 'easy',
@@ -24,7 +26,15 @@ export interface PuzzleData {
 export interface Puzzle {
   id: string;
   title: string;
-  difficulty: Difficulty;
+  /**
+   * Legacy single-tier label, carried by premade puzzles and the original
+   * generator. Being replaced by `rating`, which measures difficulty on two
+   * independent axes; what the tiers should be called is deliberately still
+   * open, so nothing maps `rating` back onto this yet.
+   */
+  difficulty?: Difficulty;
+  /** Two-axis measured difficulty, on puzzles that have been rated. */
+  rating?: DifficultyRating;
   width: number;
   height: number;
   solution: boolean[][]; // Parsed from string[] (true = filled, false = empty)

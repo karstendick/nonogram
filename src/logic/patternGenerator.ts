@@ -33,26 +33,48 @@ function average(numbers: number[]): number {
 }
 
 /**
- * Calculate median of an array of numbers
+ * How a pattern is shaped. Both knobs move difficulty, measurably: denser and
+ * smoother patterns are easier on every signal, and sparser ones are harder but
+ * far more likely to admit multiple solutions. They were hardcoded (median
+ * threshold, one smoothing round) before difficulty targeting needed them.
  */
-function calculateMedian(grid: number[][]): number {
-  const values = _.flatten(grid);
-  values.sort((a, b) => a - b);
-  const mid = Math.floor(values.length / 2);
-  return values.length % 2 === 0 ? (values[mid - 1] + values[mid]) / 2 : values[mid];
+export interface PatternParams {
+  /** Share of cells to fill, 0-1. The strongest single difficulty knob. */
+  fillRatio: number;
+  /** Rounds of neighbour averaging. More rounds means blobbier shapes. */
+  smoothingRounds: number;
+}
+
+export const DEFAULT_PATTERN_PARAMS: PatternParams = { fillRatio: 0.5, smoothingRounds: 1 };
+
+/** Take the value at the given quantile of a grid, used as the fill threshold. */
+function quantile(grid: number[][], q: number): number {
+  const values = _.flatten(grid).sort((a, b) => a - b);
+  const index = Math.min(values.length - 1, Math.max(0, Math.floor((1 - q) * values.length)));
+  return values[index];
+}
+
+function smoothOnce(grid: number[][]): number[][] {
+  return grid.map((row, r) =>
+    row.map((_value, c) => average([grid[r][c], ...getNeighbors(grid, r, c)]))
+  );
 }
 
 /**
  * Generate a random pattern using cellular automaton smoothing
  * @param size Grid size (square grid)
  * @param seed Seed for reproducible randomness
+ * @param params Fill ratio and smoothing, defaulting to the original behaviour
  * @returns Binary grid (true = filled, false = empty)
  */
-export function generateRandomPattern(size: number, seed: string): boolean[][] {
+export function generateRandomPattern(
+  size: number,
+  seed: string,
+  params: PatternParams = DEFAULT_PATTERN_PARAMS
+): boolean[][] {
   const rng = seedrandom(seed);
 
-  // Step 1: Generate random values [0.0, 1.0]
-  const grid: number[][] = Array(size)
+  let grid: number[][] = Array(size)
     .fill(0)
     .map(() =>
       Array(size)
@@ -60,21 +82,14 @@ export function generateRandomPattern(size: number, seed: string): boolean[][] {
         .map(() => rng())
     );
 
-  // Step 2: Cellular automaton smoothing
-  // Average each cell with its neighbors
-  const smoothed: number[][] = grid.map((row, r) =>
-    row.map((_, c) => {
-      const neighbors = getNeighbors(grid, r, c);
-      const cellValue = grid[r][c];
-      return average([cellValue, ...neighbors]);
-    })
-  );
+  for (let i = 0; i < params.smoothingRounds; i++) {
+    grid = smoothOnce(grid);
+  }
 
-  // Step 3: Threshold at median (targets ~50% fill rate)
-  const median = calculateMedian(smoothed);
-  const binary: boolean[][] = smoothed.map((row) => row.map((val) => val >= median));
-
-  return binary;
+  // Thresholding at the fill-ratio quantile hits the requested density
+  // regardless of how smoothing narrowed the distribution.
+  const threshold = quantile(grid, params.fillRatio);
+  return grid.map((row) => row.map((value) => value >= threshold));
 }
 
 /**
@@ -82,7 +97,7 @@ export function generateRandomPattern(size: number, seed: string): boolean[][] {
  * @param array Array of booleans (true = filled, false = empty)
  * @returns Array of block sizes
  */
-function calculateArrayClues(array: boolean[]): number[] {
+export function calculateArrayClues(array: boolean[]): number[] {
   const clues: number[] = [];
   let currentBlock = 0;
 

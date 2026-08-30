@@ -772,6 +772,64 @@ There is a pleasing loop here too: hint usage is exactly the kind of real-play s
 calibration (E14) wants. Which puzzles get hints requested, and at which tier the player got stuck,
 would say more about actual difficulty than any of the models in this document.
 
+## Implementation notes (Phases 1 and 2, as built)
+
+What the build turned up that the spec did not anticipate. Recorded here because
+two items bear on decisions already made.
+
+### The measured deduction count is roughly double what the probes suggested
+
+The exploratory probes measured 36–65 deductions for a 15×15. The built solver
+measures **0.28–0.61 deductions per cell**, i.e. 63–138. The difference is the
+solve policy: the probes took the highest-yield line available, while the spec
+settled on cheapest-technique-first (Open Question 3). Taking the easiest move
+rather than the biggest one produces many more, smaller deductions.
+
+This is the correct behaviour and the anchors in `score.ts` were set from the
+real numbers. It is worth flagging because every step-count figure quoted in the
+Research section above is on the old policy and should not be used for
+calibration. It also strengthens the caveat under Open Question 10: plateau
+length was measured under the same superseded policy.
+
+### The technique axis saturates near the top, and a max may be too lossy here
+
+Measured across the generator's whole range at 15×15, the technique axis spans
+36–100 with a **median of 78** — most puzzles are rated "requires forced
+placement". Only five distinct values occur at all.
+
+The cause is structural: a max over a whole 15×15 board is a max over roughly a
+hundred deductions across thirty lines, and virtually every puzzle needs
+_something_ hard _somewhere_. The rung that a puzzle "requires" is therefore
+almost always near the top, regardless of how the rest of the solve felt.
+
+This does not overturn Open Question 12's choice of a max — that was made
+knowingly and provisionally, and the work axis does carry the volume information
+a max discards. But the compression is worse than expected, and the decision to
+keep the **full technique distribution** in the trace is what makes revisiting it
+cheap: a high percentile, or a count of how often the top rung is needed, is a
+change to `rateTrace` alone. Worth reconsidering once there is play experience to
+check it against.
+
+### Bands have to be cut from measured scores, not guessed
+
+The first bake-off scored 0% almost everywhere, because the bands had been
+written before anything had been measured and mostly sat outside the reachable
+region. Band definitions now come from the calibration run. Any future change to
+the ladder or the scoring function invalidates them, which is what the
+calibration script exists to catch.
+
+### Two bugs the tests caught, worth keeping tests on
+
+- **Completed lines went unvalidated.** Both solvers skipped lines with no
+  unknown cells, so a line completed in violation of its clues was never
+  noticed and the solve reported success. This also silently weakened depth-1,
+  which refutes hypotheses precisely by completing lines wrongly.
+- **Depth-1 deductions were not counted as work.** They incremented the
+  technique counts but were never appended to the trace's steps, so the hardest
+  puzzles reported the _least_ work. Depth-1 is now a rung inside the traced
+  solve rather than a separate pass, which fixes the count and keeps one
+  coherent trace.
+
 ## Test Plan
 
 Sketch, pending the decisions above.
@@ -941,11 +999,16 @@ Sketch, pending the decisions above.
 
 13. **Which generation strategy wins?** _Resolved as to method: build G1, G2, G3, G5, and G9 behind
     one interface and decide by measurement — the question rests on empirical findings nobody has
-    yet, and every argument so far has been a prediction._ The answer itself stays open until the
-    bake-off runs. Note the sequencing: the bake-off needs a settled score function to target, so
-    Open Question 1 has to land first. A plausible prior going in is that G9 covers the common tiers
-    cheaply and something targeted handles Expert, but that is exactly the kind of prediction the
-    measurement exists to check.
+    yet, and every argument so far has been a prediction._ _The bake-off has now run: **G2 knob-biased sampling wins**, at
+    100% in every band and the fewest candidates burned. G5 is G2 plus a fallback that never fires;
+    G3 hill climbing is the clear loser, missing bands and breaking the time cap; G9 is a strong
+    second and the natural fit for background buffer-filling. See the results table above._ Final
+    sign-off is the user's, and Phase 3 is where it gets wired up.
+
+    Worth noting how badly the priors did. The prediction going in was that G9 could not reach the
+    hardest band, and that G3 would be robust for optimising the real score rather than a proxy. G9
+    reached it every time; G3 was the worst strategy measured. This is the case for having built all
+    five rather than reasoning about which to build.
 
 14. **Does the player choose both axes, or only one?** Two ratings are being _displayed_, but that
     does not settle what the generation UI asks for. Offering two independent selectors on a
