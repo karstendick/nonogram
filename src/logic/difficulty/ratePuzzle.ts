@@ -23,9 +23,5 @@ export function ratePuzzle(solution: boolean[][]): DifficultyRating {
 /** Rate a puzzle written in the `#`/`.` notation puzzles.json uses. */
 export function ratePuzzleData(rows: string[]): StoredRating {
   const rating = ratePuzzle(rows.map((row) => [...row].map((cell) => cell === '#')));
-  return {
-    technique: rating.technique,
-    work: rating.work,
-    maxTechnique: rating.maxTechnique,
-  };
+  return { maxTechnique: rating.maxTechnique, deductions: rating.deductions };
 }

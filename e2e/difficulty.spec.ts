@@ -20,14 +20,11 @@ test.describe('difficulty selection', () => {
   });
 
   test('offers difficulty levels and generates a puzzle at the chosen one', async ({ page }) => {
-    await expect(page.getByRole('radio', { name: /Level 1/ })).toBeVisible();
-    await expect(page.getByRole('radio', { name: /Level 4/ })).toBeVisible();
+    await expect(page.getByRole('radio', { name: /Easy/ })).toBeVisible();
+    await expect(page.getByRole('radio', { name: /Evil/ })).toBeVisible();
 
-    await page.getByRole('radio', { name: /Level 3/ }).click();
-    await expect(page.getByRole('radio', { name: /Level 3/ })).toHaveAttribute(
-      'aria-checked',
-      'true'
-    );
+    await page.getByRole('radio', { name: /Hard/ }).click();
+    await expect(page.getByRole('radio', { name: /Hard/ })).toHaveAttribute('aria-checked', 'true');
 
     await page.getByRole('button', { name: /Play Random Puzzle/i }).click();
 
@@ -39,10 +36,10 @@ test.describe('difficulty selection', () => {
   });
 
   test('generating the hardest level keeps the page responsive', async ({ page }) => {
-    await page.getByRole('radio', { name: /Level 4/ }).click();
+    await page.getByRole('radio', { name: /Evil/ }).click();
     await page.getByRole('button', { name: /Play Random Puzzle/i }).click();
 
-    // Level 4 needs reasoning by contradiction, which is the slowest thing the
+    // Evil needs reasoning by contradiction, which is the slowest thing the
     // generator does. Every query below needs the main thread, so a frozen tab
     // would time out here rather than pass.
     await expect(
@@ -53,20 +50,39 @@ test.describe('difficulty selection', () => {
   });
 
   test('remembers the level across a reload', async ({ page }) => {
-    await page.getByRole('radio', { name: /Level 4/ }).click();
+    await page.getByRole('radio', { name: /Evil/ }).click();
     await page.getByRole('button', { name: /Play Random Puzzle/i }).click();
     await expect(page.locator('[data-row="0"][data-col="0"]')).toBeVisible({ timeout: 30000 });
 
     await page.goto('/');
     await page.getByRole('button', { name: /Back to Home/i }).click();
-    await expect(page.getByRole('radio', { name: /Level 4/ })).toHaveAttribute(
-      'aria-checked',
-      'true'
-    );
+    await expect(page.getByRole('radio', { name: /Evil/ })).toHaveAttribute('aria-checked', 'true');
   });
 
   test('premade puzzles show their measured ratings', async ({ page }) => {
     await page.getByText('Pre-made Puzzles').click();
     await expect(page.getByLabel(/^Difficulty: needs /).first()).toBeVisible();
   });
+});
+
+test('the completion screen compares your moves to the deductions required', async ({ page }) => {
+  await page.goto('/');
+  await page.getByText('Pre-made Puzzles').click();
+  await page.getByText('House').click();
+
+  // Fill the solution by clicking every filled cell of the 5x5 house.
+  const house = ['..#..', '.###.', '#####', '#...#', '#...#'];
+  for (let r = 0; r < house.length; r++) {
+    for (let c = 0; c < house[r].length; c++) {
+      if (house[r][c] === '#') await page.locator(`[data-row="${r}"][data-col="${c}"]`).click();
+    }
+  }
+
+  // The replay runs first; skip it to reach the completion screen.
+  const skip = page.getByRole('button', { name: /Skip/i });
+  if (await skip.isVisible().catch(() => false)) await skip.click();
+
+  await expect(page.getByText('Your moves')).toBeVisible({ timeout: 20000 });
+  await expect(page.getByText('Deductions needed')).toBeVisible();
+  await expect(page.getByText('Efficiency')).toBeVisible();
 });

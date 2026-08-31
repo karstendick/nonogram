@@ -22,6 +22,6 @@ export function generatePuzzle(
   levelId: number = DEFAULT_LEVEL_ID
 ): Puzzle | null {
   const level = levelById(levelId);
-  const result = generateForTarget({ ...level.target, size }, seed, { budgetMs: 5000 });
+  const result = generateForTarget({ size, rung: level.rung }, seed, { budgetMs: 5000 });
   return result.puzzle;
 }

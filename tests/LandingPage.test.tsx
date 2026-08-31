@@ -10,7 +10,7 @@ function fakePuzzle(id: string): Puzzle {
   return {
     id,
     title: 'Generated 15×15',
-    rating: { technique: 60, work: 40, maxTechnique: 6 },
+    rating: { maxTechnique: 6, deductions: 90 },
     width: 15,
     height: 15,
     solution: Array.from({ length: 15 }, () => Array<boolean>(15).fill(false)),
@@ -40,7 +40,7 @@ describe('LandingPage', () => {
     useGameStore.setState({ lastLevelId: DEFAULT_LEVEL_ID });
     take.mockResolvedValue({
       puzzle: fakePuzzle('seed-1'),
-      rating: { technique: 60, work: 40 } as never,
+      rating: { maxTechnique: 6, deductions: 90 } as never,
       inBand: true,
     });
     speculate.mockImplementation(() => {});
@@ -61,13 +61,13 @@ describe('LandingPage', () => {
   it('starts on the level the player used last', () => {
     useGameStore.setState({ lastLevelId: 4 });
     renderPage();
-    expect(screen.getByRole('radio', { name: /Level 4/ })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: /Evil/ })).toHaveAttribute('aria-checked', 'true');
   });
 
   it('allows changing the level', () => {
     renderPage();
-    fireEvent.click(screen.getByRole('radio', { name: /Level 3/ }));
-    expect(screen.getByRole('radio', { name: /Level 3/ })).toHaveAttribute('aria-checked', 'true');
+    fireEvent.click(screen.getByRole('radio', { name: /Hard/ }));
+    expect(screen.getByRole('radio', { name: /Hard/ })).toHaveAttribute('aria-checked', 'true');
   });
 
   it('speculates on the remembered level so the first puzzle is not a cold start', async () => {
@@ -78,7 +78,7 @@ describe('LandingPage', () => {
 
   it('re-speculates when the level changes, since the in-flight work is now useless', () => {
     renderPage();
-    fireEvent.click(screen.getByRole('radio', { name: /Level 4/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /Evil/ }));
     expect(speculate).toHaveBeenCalledWith(4);
   });
 
@@ -93,7 +93,7 @@ describe('LandingPage', () => {
 
   it('requests the selected level', async () => {
     const props = renderPage();
-    fireEvent.click(screen.getByRole('radio', { name: /Level 4/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /Evil/ }));
     fireEvent.click(screen.getByRole('button', { name: /Play Random Puzzle/i }));
 
     await waitFor(() => expect(props.onPuzzleSelected).toHaveBeenCalled());
@@ -102,7 +102,7 @@ describe('LandingPage', () => {
 
   it('remembers the level played, so the next session can speculate on it', async () => {
     const props = renderPage();
-    fireEvent.click(screen.getByRole('radio', { name: /Level 3/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /Hard/ }));
     fireEvent.click(screen.getByRole('button', { name: /Play Random Puzzle/i }));
 
     await waitFor(() => expect(props.onPuzzleSelected).toHaveBeenCalled());
@@ -120,7 +120,7 @@ describe('LandingPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /Play Random Puzzle/i }));
 
     expect(screen.getByRole('button', { name: /Generating/i })).toBeDisabled();
-    expect(screen.getByRole('radio', { name: /Level 1/ })).toBeDisabled();
+    expect(screen.getByRole('radio', { name: /Easy/ })).toBeDisabled();
 
     report?.({
       stats: { candidates: 12, rejectedUnsolvable: 5, rejectedDegenerate: 0, ambiguityProofs: 3 },

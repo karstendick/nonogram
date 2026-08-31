@@ -5,9 +5,8 @@
       "title": "Heart",
       "solution": [".##.##.", "#######", "#######", ".#####.", "..###..", "...#...", "......."],
       "rating": {
-        "technique": 28,
-        "work": 39,
-        "maxTechnique": 3
+        "maxTechnique": 3,
+        "deductions": 20
       }
     },
     {
@@ -15,9 +14,8 @@
       "title": "House",
       "solution": ["..#..", ".###.", "#####", "#...#", "#...#"],
       "rating": {
-        "technique": 44,
-        "work": 88,
-        "maxTechnique": 5
+        "maxTechnique": 5,
+        "deductions": 16
       }
     },
     {
@@ -25,9 +23,8 @@
       "title": "Tree",
       "solution": ["..#..", ".###.", "#####", "..#..", "..#.."],
       "rating": {
-        "technique": 28,
-        "work": 21,
-        "maxTechnique": 3
+        "maxTechnique": 3,
+        "deductions": 8
       }
     },
     {
@@ -35,9 +32,8 @@
       "title": "Cross",
       "solution": ["..#..", "..#..", "#####", "..#..", "..#.."],
       "rating": {
-        "technique": 28,
-        "work": 29,
-        "maxTechnique": 3
+        "maxTechnique": 3,
+        "deductions": 9
       }
     },
     {
@@ -45,9 +41,8 @@
       "title": "Diamond",
       "solution": ["..#..", ".###.", "#####", ".###.", "..#.."],
       "rating": {
-        "technique": 44,
-        "work": 29,
-        "maxTechnique": 5
+        "maxTechnique": 5,
+        "deductions": 9
       }
     },
     {
@@ -66,9 +61,8 @@
         ".........#"
       ],
       "rating": {
-        "technique": 78,
-        "work": 38,
-        "maxTechnique": 7
+        "maxTechnique": 7,
+        "deductions": 40
       }
     },
     {
@@ -87,9 +81,8 @@
         ".........."
       ],
       "rating": {
-        "technique": 44,
-        "work": 25,
-        "maxTechnique": 5
+        "maxTechnique": 5,
+        "deductions": 34
       }
     },
     {
@@ -108,9 +101,8 @@
         ".........."
       ],
       "rating": {
-        "technique": 78,
-        "work": 29,
-        "maxTechnique": 7
+        "maxTechnique": 7,
+        "deductions": 36
       }
     },
     {
@@ -134,9 +126,8 @@
         "....#######...."
       ],
       "rating": {
-        "technique": 100,
-        "work": 0,
-        "maxTechnique": 8
+        "maxTechnique": 8,
+        "deductions": 37
       }
     },
     {
@@ -160,9 +151,8 @@
         "..............."
       ],
       "rating": {
-        "technique": 100,
-        "work": 50,
-        "maxTechnique": 8
+        "maxTechnique": 8,
+        "deductions": 103
       }
     }
   ]

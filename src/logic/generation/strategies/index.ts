@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import seedrandom from 'seedrandom';
 import { PatternParams, generateRandomPattern } from '../../patternGenerator';
+import { LEVELS } from '../levels';
 import { Candidate, drawCandidate, evaluatePattern } from '../evaluate';
 import {
   DEFAULT_OPTIONS,
@@ -24,21 +25,16 @@ import {
  * the bake-off compares how they SEARCH and nothing else.
  */
 
-/** Pattern shapes per difficulty, from the probe data recorded in the spec. */
-export const PRESETS: { technique: number; params: PatternParams }[] = [
-  { technique: 0, params: { fillRatio: 0.65, smoothingRounds: 0 } },
-  { technique: 30, params: { fillRatio: 0.55, smoothingRounds: 1 } },
-  { technique: 55, params: { fillRatio: 0.5, smoothingRounds: 2 } },
-  { technique: 75, params: { fillRatio: 0.4, smoothingRounds: 1 } },
-  { technique: 90, params: { fillRatio: 0.35, smoothingRounds: 1 } },
-];
-
 /** The single cheap, high-yield preset G9 samples from without targeting. */
 export const OPPORTUNISTIC_PARAMS: PatternParams = { fillRatio: 0.5, smoothingRounds: 2 };
 
+/**
+ * The pattern shape that produces the target rung most often, measured rather
+ * than guessed: 57% for completion, 90% for segment partitioning, 88% for
+ * forced placement, 40% for contradiction.
+ */
 function presetFor(target: DifficultyTarget): PatternParams {
-  const midpoint = (target.technique.min + target.technique.max) / 2;
-  return _.minBy(PRESETS, (p) => Math.abs(p.technique - midpoint))!.params;
+  return (LEVELS.find((level) => level.rung === target.rung) ?? LEVELS[0]).params;
 }
 
 /** Tracks the closest candidate seen, so a budget overrun still returns something. */

@@ -12,6 +12,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { it } from 'vitest';
 import { ratePuzzleData } from '../src/logic/difficulty/ratePuzzle';
+import { TECHNIQUE_NAMES } from '../src/logic/difficulty/types';
 
 const PATH = new URL('../src/data/puzzles.json', import.meta.url);
 
@@ -25,7 +26,7 @@ it('rate premades', () => {
     delete puzzle.difficulty;
     Object.assign(puzzle, { rating });
     console.log(
-      `${puzzle.id.padEnd(14)} technique=${String(rating.technique).padStart(3)}  work=${String(rating.work).padStart(3)}  ${rating.maxTechnique}`
+      `${puzzle.id.padEnd(14)} ${TECHNIQUE_NAMES[rating.maxTechnique].padEnd(22)} ${String(rating.deductions).padStart(4)} deductions`
     );
   }
 

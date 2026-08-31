@@ -15,8 +15,7 @@ describe('puzzleGenerator', () => {
       expect(puzzle.rowClues).toHaveLength(5);
       expect(puzzle.columnClues).toHaveLength(5);
       expect(puzzle.rating).toBeDefined();
-      expect(puzzle.rating!.technique).toBeGreaterThanOrEqual(0);
-      expect(puzzle.rating!.work).toBeGreaterThanOrEqual(0);
+      expect(puzzle.rating!.deductions).toBeGreaterThan(0);
     }
   });
 

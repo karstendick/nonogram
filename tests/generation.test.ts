@@ -12,18 +12,12 @@ import {
 import { bandName, summarize } from '../src/logic/generation/bakeoff';
 import { DifficultyRating, Technique } from '../src/logic/difficulty/types';
 
-const easyish: DifficultyTarget = {
-  size: 10,
-  technique: { min: 0, max: 100 },
-  work: { min: 0, max: 100 },
-};
+const easyish: DifficultyTarget = { size: 10, rung: Technique.SegmentPartition };
 
-function rating(technique: number, work: number): DifficultyRating {
+function rating(maxTechnique: Technique, deductions = 40): DifficultyRating {
   return {
-    technique,
-    work,
-    maxTechnique: Technique.Overlap,
-    deductions: 10,
+    maxTechnique,
+    deductions,
     cellsPerDeduction: 5,
     openingGenerosity: 0.3,
     bottleneckSteps: 0,
@@ -58,42 +52,38 @@ describe('pattern parameters', () => {
 });
 
 describe('target helpers', () => {
-  it('recognises a rating inside the band', () => {
-    const target: DifficultyTarget = {
-      size: 15,
-      technique: { min: 20, max: 60 },
-      work: { min: 10, max: 50 },
-    };
-    expect(inTarget(rating(40, 30), target)).toBe(true);
-    expect(inTarget(rating(70, 30), target)).toBe(false);
-    expect(inTarget(rating(40, 80), target)).toBe(false);
+  const target: DifficultyTarget = { size: 15, rung: Technique.ForcedPlacement };
+
+  it('recognises a rating at the target rung', () => {
+    expect(inTarget(rating(Technique.ForcedPlacement), target)).toBe(true);
+    expect(inTarget(rating(Technique.SegmentPartition), target)).toBe(false);
+    expect(inTarget(rating(Technique.Depth1Contradiction), target)).toBe(false);
   });
 
-  it('scores distance as zero inside the band and grows outside it', () => {
-    const target: DifficultyTarget = {
-      size: 15,
-      technique: { min: 20, max: 60 },
-      work: { min: 10, max: 50 },
-    };
-    expect(distanceToTarget(rating(40, 30), target)).toBe(0);
-    expect(distanceToTarget(rating(70, 30), target)).toBeGreaterThan(0);
+  it('ignores the deduction count, which is reported rather than targeted', () => {
+    expect(inTarget(rating(Technique.ForcedPlacement, 60), target)).toBe(true);
+    expect(inTarget(rating(Technique.ForcedPlacement, 140), target)).toBe(true);
   });
 
-  it('weights the technique axis more heavily than work', () => {
-    // Someone asking for a hard puzzle mostly cares about the reasoning it demands.
-    const target: DifficultyTarget = {
-      size: 15,
-      technique: { min: 20, max: 60 },
-      work: { min: 10, max: 50 },
-    };
-    expect(distanceToTarget(rating(70, 30), target)).toBeGreaterThan(
-      distanceToTarget(rating(40, 60), target)
+  it('folds the rungs below completion into the easiest level', () => {
+    // They occur in about 1% of puzzles — too rare to hold out for, and a player
+    // could not tell them from the level above.
+    const easiest: DifficultyTarget = { size: 15, rung: Technique.Completion };
+    expect(inTarget(rating(Technique.Overlap), easiest)).toBe(true);
+    expect(inTarget(rating(Technique.GapTooSmall), easiest)).toBe(true);
+  });
+
+  it('measures distance in rungs, for picking the best near-miss', () => {
+    expect(distanceToTarget(rating(Technique.ForcedPlacement), target)).toBe(0);
+    expect(distanceToTarget(rating(Technique.SegmentPartition), target)).toBe(1);
+    expect(distanceToTarget(rating(Technique.Completion), target)).toBeGreaterThan(
+      distanceToTarget(rating(Technique.SegmentPartition), target)
     );
   });
 });
 
 describe('candidate evaluation', () => {
-  it('rates a solvable pattern on both axes', () => {
+  it('rates a solvable pattern on both readings', () => {
     const stats = emptyStats();
     let found: Candidate | null = null;
     for (let i = 0; i < 40 && !found; i++) {
@@ -105,9 +95,10 @@ describe('candidate evaluation', () => {
       );
     }
     expect(found).not.toBeNull();
-    expect(found.rating.technique).toBeGreaterThanOrEqual(0);
-    expect(found.puzzle.rating).toEqual(found.rating);
-    expect(found.puzzle.solution.length).toBe(10);
+    expect(found!.rating.deductions).toBeGreaterThan(0);
+    expect(found!.rating.maxTechnique).toBeGreaterThanOrEqual(0);
+    expect(found!.puzzle.rating).toEqual(found!.rating);
+    expect(found!.puzzle.solution.length).toBe(10);
   });
 
   it('rejects degenerate patterns without solving them', () => {
@@ -163,27 +154,22 @@ describe('strategies', () => {
   });
 
   it('respects the time budget', () => {
-    const impossible: DifficultyTarget = {
-      size: 10,
-      technique: { min: 101, max: 200 },
-      work: { min: 0, max: 100 },
-    };
+    // Unreachable target, so the budget is what stops it.
+    const impossible: DifficultyTarget = { size: 10, rung: Technique.Overlap };
     const started = Date.now();
     g2KnobBiased(impossible, 'budget', { budgetMs: 600 });
     expect(Date.now() - started).toBeLessThan(3000);
   });
 
   it('returns the closest candidate rather than nothing when it misses', () => {
-    const impossible: DifficultyTarget = {
-      size: 10,
-      technique: { min: 101, max: 200 },
-      work: { min: 0, max: 100 },
-    };
+    // Unreachable by construction: rungs below completion are folded up to it,
+    // so a target below completion can never be matched.
+    const impossible: DifficultyTarget = { size: 10, rung: Technique.Overlap };
     const result = g9Opportunistic(impossible, 'near-miss', { budgetMs: 800 });
     expect(result.inBand).toBe(false);
     expect(result.puzzle).not.toBeNull();
-    // The reported rating is the puzzle's real one, never the requested band.
-    expect(result.rating!.technique).toBeLessThan(101);
+    // The reported rating is the puzzle's real one, never the requested level.
+    expect(result.rating!.maxTechnique).toBeGreaterThan(Technique.Overlap);
   });
 
   it('is deterministic for a seed', () => {
@@ -197,8 +183,8 @@ describe('strategies', () => {
 describe('bakeoff reporting', () => {
   it('summarises hit rate and timing spread', () => {
     const trials = [
-      { elapsedMs: 100, candidates: 2, inBand: true, technique: 40, work: 30 },
-      { elapsedMs: 300, candidates: 8, inBand: false, technique: 10, work: 20 },
+      { elapsedMs: 100, candidates: 2, inBand: true, deductions: 90 },
+      { elapsedMs: 300, candidates: 8, inBand: false, deductions: 40 },
     ].map((t) => ({
       strategy: 'X',
       targetName: 'band',
@@ -214,9 +200,9 @@ describe('bakeoff reporting', () => {
     expect(summary.p90Ms).toBeGreaterThanOrEqual(summary.medianMs);
   });
 
-  it('names bands by their bounds, since the tier names are still deferred', () => {
-    expect(bandName({ size: 15, technique: { min: 0, max: 30 }, work: { min: 0, max: 45 } })).toBe(
-      'tech 0-30 / work 0-45'
+  it('names bands by the rung they ask for', () => {
+    expect(bandName({ size: 15, rung: Technique.ForcedPlacement })).toBe(
+      '15x15 needing forced placement'
     );
   });
 });

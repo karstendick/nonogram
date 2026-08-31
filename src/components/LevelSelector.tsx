@@ -7,13 +7,11 @@ interface LevelSelectorProps {
 }
 
 /**
- * Difficulty as a numbered level.
+ * Difficulty as one of four levels, each being a rung of the technique ladder.
  *
- * Numbered rather than named on purpose. How many tiers there should be and
- * what to call them is still open — naming one is a claim about how a puzzle
- * feels, and that is answered by playing a spread of them rather than by
- * argument. Numbers are ordinal without claiming anything, and the puzzle's
- * measured rating is shown once it is generated.
+ * The level says what kind of thinking the puzzle will demand, which is exactly
+ * what is measured. How long it takes is reported afterwards rather than chosen:
+ * see the spec for why a length control was measured and dropped.
  */
 export function LevelSelector({ value, onChange, disabled }: LevelSelectorProps) {
   const selected = LEVELS.find((level) => level.id === value);
@@ -28,16 +26,16 @@ export function LevelSelector({ value, onChange, disabled }: LevelSelectorProps)
             type="button"
             role="radio"
             aria-checked={value === level.id}
-            aria-label={`Level ${level.id}: ${level.hint}`}
+            aria-label={`${level.name}: ${level.hint}`}
             disabled={disabled}
             onClick={() => onChange(level.id)}
-            className={`py-2 rounded-md font-semibold transition-colors border-2 select-none ${
+            className={`py-2 px-1 text-sm rounded-md font-semibold transition-colors border-2 select-none ${
               value === level.id
                 ? 'bg-purple-600 text-white border-purple-600'
                 : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300'
             } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           >
-            {level.id}
+            {level.name}
           </button>
         ))}
       </div>

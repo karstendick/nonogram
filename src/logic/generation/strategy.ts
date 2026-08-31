@@ -1,5 +1,5 @@
 import { Puzzle } from '../../types';
-import { DifficultyRating } from '../difficulty/types';
+import { DifficultyRating, Technique } from '../difficulty/types';
 
 /**
  * The common interface every generation strategy implements.
@@ -11,11 +11,16 @@ import { DifficultyRating } from '../difficulty/types';
  * without touching callers.
  */
 
-/** A target region in the two-dimensional technique/work space. */
+/**
+ * What to generate: a grid size and the rung the puzzle must top out at.
+ *
+ * Length is deliberately not part of the target. Constraining it as well was
+ * measured and costs an order of magnitude at the hardest rung for a control
+ * players could barely feel.
+ */
 export interface DifficultyTarget {
   size: number;
-  technique: { min: number; max: number };
-  work: { min: number; max: number };
+  rung: Technique;
 }
 
 export interface GenerationStats {
@@ -84,24 +89,20 @@ export function emptyStats(): GenerationStats {
 }
 
 export function inTarget(rating: DifficultyRating, target: DifficultyTarget): boolean {
-  return (
-    rating.technique >= target.technique.min &&
-    rating.technique <= target.technique.max &&
-    rating.work >= target.work.min &&
-    rating.work <= target.work.max
-  );
+  // Rungs below completion are folded into the easiest level: too rare to hold
+  // out for, and indistinguishable to a player from the level above.
+  const rung: Technique = Math.max(rating.maxTechnique, Technique.Completion);
+  return rung === target.rung;
 }
 
 /**
  * How far a rating sits from the target, for picking the best near-miss.
  *
- * When the budget runs out, generation returns its closest candidate and
- * reports that puzzle's actual rating rather than failing empty-handed. The
- * technique axis is weighted more heavily because someone who asked for a hard
- * puzzle mostly cares about the reasoning it demands.
+ * When the budget runs out, generation returns its closest candidate and reports
+ * that puzzle's actual rating rather than failing empty-handed. Distance is
+ * measured in rungs, since that is what the level means.
  */
 export function distanceToTarget(rating: DifficultyRating, target: DifficultyTarget): number {
-  const miss = (value: number, band: { min: number; max: number }) =>
-    value < band.min ? band.min - value : value > band.max ? value - band.max : 0;
-  return 2 * miss(rating.technique, target.technique) + miss(rating.work, target.work);
+  const rung = Math.max(rating.maxTechnique, Technique.Completion);
+  return Math.abs(rung - target.rung);
 }

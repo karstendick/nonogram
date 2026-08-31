@@ -8,7 +8,7 @@ import type { Puzzle } from '../src/types';
 const makePuzzle = (title: string, size: number, id = 'test-seed'): Puzzle => ({
   id,
   title,
-  rating: { technique: 60, work: 40, maxTechnique: 6 },
+  rating: { maxTechnique: 6, deductions: 90 },
   width: size,
   height: size,
   solution: Array.from({ length: size }, () => Array<boolean>(size).fill(false)),
@@ -27,7 +27,7 @@ describe('CompletionModal', () => {
   beforeEach(() => {
     take.mockResolvedValue({
       puzzle: makePuzzle('Generated 15×15', 15, 'fresh-seed'),
-      rating: { technique: 60, work: 40 } as never,
+      rating: { maxTechnique: 6, deductions: 90 } as never,
       inBand: true,
     });
     useGameStore.setState({ currentPuzzle: null, isComplete: false, moves: 0 });

@@ -138,7 +138,6 @@ describe('solveWithDepth1', () => {
   it('rates a depth-1 puzzle at the top of the ladder', () => {
     const rating = rateTrace(solveWithDepth1(needsDepth1).trace, needsDepth1);
     expect(rating.maxTechnique).toBe(Technique.Depth1Contradiction);
-    expect(rating.technique).toBe(100);
   });
 
   it('respects a trial budget', () => {
@@ -199,12 +198,14 @@ describe('provesAmbiguous', () => {
 });
 
 describe('rateTrace', () => {
-  it('scores both axes independently', () => {
-    const rating = rateTrace(traceSolve(cross), cross);
-    expect(rating.technique).toBeGreaterThanOrEqual(0);
-    expect(rating.technique).toBeLessThanOrEqual(100);
-    expect(rating.work).toBeGreaterThanOrEqual(0);
-    expect(rating.work).toBeLessThanOrEqual(100);
+  it('reports both readings as measured, not rescaled', () => {
+    const trace = traceSolve(cross);
+    const rating = rateTrace(trace, cross);
+    // The rung is a ladder position and the deductions are a count. Neither is
+    // mapped onto a percentage, which would invent precision the max over a
+    // nine-rung ladder does not have.
+    expect(rating.maxTechnique).toBe(trace.maxTechnique);
+    expect(rating.deductions).toBe(trace.steps.length);
   });
 
   it('reads the technique axis off the hardest rung required', () => {
@@ -213,8 +214,8 @@ describe('rateTrace', () => {
     expect(rating.maxTechnique).toBe(trace.maxTechnique);
   });
 
-  it('does not normalize work for grid size', () => {
-    // A larger puzzle is more work, and the axis should say so rather than
+  it('does not normalize the deduction count for grid size', () => {
+    // A larger puzzle is more work, and the count should say so rather than
     // dividing the difference away. See Requirement 2.
     const big = puzzleFrom([
       '..####..',

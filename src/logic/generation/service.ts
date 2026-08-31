@@ -66,7 +66,7 @@ function startJob(
   onProgress?: (progress: GenerationProgress) => void
 ): Job {
   if (!supportsWorkers()) {
-    const result = generateForTarget(level.target, seed, { budgetMs: BUDGET_MS });
+    const result = generateForTarget({ size: 15, rung: level.rung }, seed, { budgetMs: BUDGET_MS });
     return {
       levelId: level.id,
       seed,
@@ -114,7 +114,7 @@ function startJob(
 
   const request: GenerateRequest = {
     type: 'generate',
-    target: level.target,
+    target: { size: 15, rung: level.rung },
     seed,
     budgetMs: BUDGET_MS,
   };

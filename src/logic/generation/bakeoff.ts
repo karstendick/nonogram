@@ -1,6 +1,6 @@
 import { STRATEGIES } from './strategies';
 import { DifficultyTarget, GenerationOptions } from './strategy';
-import { Technique } from '../difficulty/types';
+import { TECHNIQUE_NAMES, Technique } from '../difficulty/types';
 import { LEVELS } from './levels';
 
 /**
@@ -18,8 +18,7 @@ export interface TrialResult {
   inBand: boolean;
   elapsedMs: number;
   candidates: number;
-  technique: number | null;
-  work: number | null;
+  deductions: number | null;
   maxTechnique: Technique | null;
   openingGenerosity: number | null;
   ambiguityProofs: number;
@@ -35,9 +34,8 @@ export interface Summary {
   p90Ms: number;
   p99Ms: number;
   medianCandidates: number;
-  /** Where the ratings actually landed, which a hit rate alone hides. */
-  techniqueSpread: [number, number];
-  workSpread: [number, number];
+  /** Where the deduction counts actually landed, which a hit rate alone hides. */
+  deductionSpread: [number, number];
   /** Distinct patterns produced, as a rough proxy for variety. */
   distinctTechniques: number;
   ambiguityProofRate: number;
@@ -48,10 +46,10 @@ export interface Summary {
  * The bands the bake-off races over: the same levels the product offers, so the
  * measurements describe what players will actually get.
  */
-export const BANDS: DifficultyTarget[] = LEVELS.map((level) => level.target);
+export const BANDS: DifficultyTarget[] = LEVELS.map((level) => ({ size: 15, rung: level.rung }));
 
 export function bandName(target: DifficultyTarget): string {
-  return `tech ${target.technique.min}-${target.technique.max} / work ${target.work.min}-${target.work.max}`;
+  return `${target.size}x${target.size} needing ${TECHNIQUE_NAMES[target.rung]}`;
 }
 
 function quantile(sorted: number[], q: number): number {
@@ -63,8 +61,7 @@ export function summarize(strategy: string, targetName: string, trials: TrialRes
   const times = trials.map((t) => t.elapsedMs).sort((a, b) => a - b);
   const candidates = trials.map((t) => t.candidates).sort((a, b) => a - b);
   const hits = trials.filter((t) => t.inBand);
-  const techniques = hits.map((t) => t.technique ?? 0);
-  const works = hits.map((t) => t.work ?? 0);
+  const deductions = hits.map((t) => t.deductions ?? 0);
 
   return {
     strategy,
@@ -75,9 +72,8 @@ export function summarize(strategy: string, targetName: string, trials: TrialRes
     p90Ms: quantile(times, 0.9),
     p99Ms: quantile(times, 0.99),
     medianCandidates: quantile(candidates, 0.5),
-    techniqueSpread:
-      techniques.length > 0 ? [Math.min(...techniques), Math.max(...techniques)] : [0, 0],
-    workSpread: works.length > 0 ? [Math.min(...works), Math.max(...works)] : [0, 0],
+    deductionSpread:
+      deductions.length > 0 ? [Math.min(...deductions), Math.max(...deductions)] : [0, 0],
     distinctTechniques: new Set(hits.map((t) => t.maxTechnique)).size,
     ambiguityProofRate:
       trials.reduce((a, t) => a + t.ambiguityProofs, 0) /
@@ -119,8 +115,7 @@ export function runBakeoff(
           inBand: result.inBand,
           elapsedMs: result.stats.elapsedMs,
           candidates: result.stats.candidates,
-          technique: result.rating?.technique ?? null,
-          work: result.rating?.work ?? null,
+          deductions: result.rating?.deductions ?? null,
           maxTechnique: result.rating?.maxTechnique ?? null,
           openingGenerosity: result.rating?.openingGenerosity ?? null,
           ambiguityProofs: result.stats.ambiguityProofs,

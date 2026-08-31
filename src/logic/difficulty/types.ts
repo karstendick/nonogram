@@ -105,20 +105,23 @@ export interface SolveTrace {
 }
 
 /**
- * A puzzle's difficulty, on two independent axes.
+ * A puzzle's difficulty, as the two things actually measured.
  *
- * Deliberately NOT normalized for grid size: a larger puzzle is more work, and
- * the work axis should say so. See Requirement 2 of the spec.
+ * Not rescaled onto 0-100. The technique axis is a max over a nine-rung ladder,
+ * so it is ordinal with a handful of reachable values, and dressing it as a
+ * percentage invented a precision the measurement does not have. Deductions are
+ * a genuine count and stay one.
+ *
+ * Deliberately NOT normalized for grid size either: a larger puzzle is more
+ * work, and the deduction count should say so.
  */
 export interface DifficultyRating {
-  /** 0-100 on the technique axis. Derived from maxTechnique. */
-  technique: number;
-  /** 0-100 on the work axis. Derived from the number of deductions. */
-  work: number;
-
-  // The raw measurements the scores are derived from, kept for calibration.
+  /** The hardest rung the solve requires — what kind of thinking it demands. */
   maxTechnique: Technique;
+  /** How many deductions the solve takes — how much of that thinking there is. */
   deductions: number;
+
+  // Diagnostics, for calibration rather than display.
   cellsPerDeduction: number;
   /** Share of the board a single blank-grid overlap sweep reveals, 0-1. */
   openingGenerosity: number;
@@ -134,7 +137,6 @@ export interface DifficultyRating {
  * calibration, and recomputing them is cheap when they are actually wanted.
  */
 export interface StoredRating {
-  technique: number;
-  work: number;
   maxTechnique: Technique;
+  deductions: number;
 }

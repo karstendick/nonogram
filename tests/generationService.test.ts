@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { generationService } from '../src/logic/generation/service';
 import * as strategies from '../src/logic/generation/strategies';
 import { emptyStats } from '../src/logic/generation/strategy';
+import { levelById } from '../src/logic/generation/levels';
 import type { Puzzle } from '../src/types';
 
 /**
@@ -14,7 +15,7 @@ function puzzleFor(seed: string): Puzzle {
   return {
     id: seed,
     title: 'Generated 15×15',
-    rating: { technique: 60, work: 40, maxTechnique: 6 },
+    rating: { maxTechnique: 6, deductions: 90 },
     width: 15,
     height: 15,
     solution: [],
@@ -32,7 +33,7 @@ beforeEach(() => {
     calls.push({ seed, target });
     return {
       puzzle: puzzleFor(seed),
-      rating: { technique: 60, work: 40 } as never,
+      rating: { maxTechnique: 6, deductions: 90 } as never,
       inBand: true,
       stats: emptyStats(),
     };
@@ -73,8 +74,8 @@ describe('generationService', () => {
 
     const result = await generationService.take(4);
     expect(result).not.toBeNull();
-    const lastTarget = calls[calls.length - 1].target as { technique: { min: number } };
-    expect(lastTarget.technique.min).toBe(95); // Level 4's band, not level 1's.
+    const lastTarget = calls[calls.length - 1].target as { rung: number };
+    expect(lastTarget.rung).toBe(levelById(4).rung); // Level 4's rung, not level 1's.
   });
 
   it('does not speculate twice for the same level', () => {

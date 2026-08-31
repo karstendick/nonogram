@@ -478,6 +478,241 @@ These apply whichever strategy wins:
   are the wrong difficulty. The UI needs to decide between retrying, widening the band, or telling
   the player.
 
+## Research: what the measurements actually look like (raw)
+
+The 0-100 rescaling of both axes has been dropped. It invented a precision the
+measurement does not have: the technique axis is a **max over a nine-rung
+ladder**, so it is ordinal with a handful of reachable values, and dressing it
+as a percentage made four distinct outcomes look like a continuum. The two
+quantities going forward are the real ones — **the hardest rung a solve
+requires**, and **the number of deductions it takes**.
+
+`npm run calibrate` over 300 generated 15x15 puzzles, sweeping the pattern
+generator's full useful range:
+
+**Deductions:** min 52, p10 77, median 95, p90 117, max 142.
+
+**Joint distribution** — hardest rung against deductions taken:
+
+| Hardest rung required | <77 | 77-94 | 95-116 | >=117 | Total | Share |
+| --------------------- | --- | ----- | ------ | ----- | ----- | ----- |
+| gap too small         | 2   | 0     | 0      | 0     | 2     | 1%    |
+| completion            | 13  | 20    | 1      | 0     | 34    | 11%   |
+| segment partitioning  | 12  | 52    | 32     | 1     | 97    | 32%   |
+| forced placement      | 2   | 41    | 61     | 20    | 124   | 41%   |
+| contradiction         | 0   | 4     | 28     | 11    | 43    | 14%   |
+
+**Deductions by rung:**
+
+| Rung                 | n   | min | p10 | median | p90 | max |
+| -------------------- | --- | --- | --- | ------ | --- | --- |
+| completion           | 34  | 53  | 66  | 80     | 89  | 97  |
+| segment partitioning | 97  | 69  | 75  | 90     | 102 | 120 |
+| forced placement     | 124 | 69  | 86  | 100    | 124 | 141 |
+| contradiction        | 43  | 80  | 95  | 108    | 128 | 142 |
+
+**Opening generosity by rung** (share of the board one overlap sweep reveals):
+completion 31%, segment partitioning 41%, forced placement 13%, contradiction
+4%. The top two rungs separate sharply from the rest; the bottom two do not
+order cleanly against each other.
+
+### The two axes are correlated, and the off-diagonal corners are nearly empty
+
+This settles the question Open Question 14 raised. The rungs and the deduction
+count rise together, and the interesting combinations are vanishingly rare:
+
+- **Hard rung, short solve** (forced placement or contradiction in under 77
+  deductions): **2 of 300**, 0.7%.
+- **Easy rung, long solve** (completion or below in 95+ deductions): **1 of
+  300**, 0.3%.
+
+So a 2x2 matrix cut on absolute thresholds would have two cells occurring 40-100
+times less often than the other two. They are reachable in principle — the
+premade `flower` is one, needing contradiction in very few deductions — but a
+generator asked for one would spend a long time hunting, and calling it a
+quarter of the difficulty space would misrepresent what is on offer.
+
+There is still real spread _within_ each rung: forced placement ranges from 69 to
+141 deductions. What does not exist is spread that runs against the grain of the
+ladder.
+
+## Options for difficulty levels
+
+All of these use the raw measurements. Shares are from the 300-puzzle sample, so
+they also say how hard each level is to generate.
+
+### Option A — four levels, one per rung
+
+| Level | Requires                 | Share |
+| ----- | ------------------------ | ----- |
+| 1     | nothing above completion | 12%   |
+| 2     | segment partitioning     | 32%   |
+| 3     | forced placement         | 41%   |
+| 4     | contradiction            | 14%   |
+
+Disjoint by construction, uses the measurement directly, and every level maps to
+a sentence about what the player will have to do. Deductions are reported but
+not selected.
+
+_Weakness:_ wide length variation inside a level — two level-3 puzzles can take
+69 or 141 deductions and will feel quite different. The player cannot ask for a
+short one.
+
+### Option B — four levels by rung, with a length band
+
+Option A, plus each level constrains deductions to that rung's own p10-p90 (level
+3 becomes "forced placement, 86-124 deductions"). Trims the outliers so a level
+feels consistent, at the cost of discarding roughly a fifth of otherwise valid
+candidates.
+
+### Option C — three levels, merging the bottom
+
+| Level | Requires                           | Share |
+| ----- | ---------------------------------- | ----- |
+| 1     | nothing above segment partitioning | 44%   |
+| 2     | forced placement                   | 41%   |
+| 3     | contradiction                      | 14%   |
+
+Three roughly balanced levels, all cheap to generate. Simplest thing that could
+work, and the cut between 1 and 2 is the sharpest one in the data: below it every
+deduction is reasoning within a single line, above it that stops being enough.
+
+_Weakness:_ level 1 lumps together completion and segment partitioning, which
+are genuinely different in feel, and covers a 53-120 deduction range.
+
+### Option D — pick the rung, then "shorter" or "longer" within it
+
+Choose a rung as in Option A or C, and separately ask for the short or long half
+of _that rung's_ deduction distribution. Level 1 long means 80-97 deductions;
+level 3 long means 100-141.
+
+This sidesteps the correlation entirely. "Long but easy" is unreachable in
+absolute terms but perfectly reachable relative to its own rung, so no
+combination is rare. It gives the player a length control the other options do
+not, and every cell stays cheap to generate.
+
+_Weakness:_ the most UI for a phone-sized landing page, and "long" meaning
+different things at different levels needs explaining — or needs not explaining,
+if the labels stay relative.
+
+### Option E — quantile cuts on a lexicographic order
+
+Order every puzzle by (rung, then deductions) and cut into three or four equal
+groups. Levels come out exactly balanced and generation cost is even across them.
+
+_Weakness:_ cut points land mid-rung, so a level stops corresponding to anything
+describable — "level 2 is forced placement, but only the shorter ones, plus the
+longest segment-partitioning ones" is not a sentence worth showing anyone.
+
+### Option D measured
+
+Sampled 15x15 puzzles per knob setting, derived the length bands from each
+rung's own deduction distribution, then measured what it costs to actually
+generate every cell (`npm run levels-d`).
+
+**Two bands per rung** — band ranges, in deductions:
+
+| Rung                 | Shorter | Longer  |
+| -------------------- | ------- | ------- |
+| completion           | 74-80   | 80-97   |
+| segment partitioning | 70-90   | 90-112  |
+| forced placement     | 73-97   | 97-123  |
+| contradiction        | 83-111  | 111-129 |
+
+| Rung                 | Shorter           | Longer           |
+| -------------------- | ----------------- | ---------------- |
+| completion           | 100% · 9ms        | 100% · 6ms       |
+| segment partitioning | 100% · 5ms        | 100% · 20ms      |
+| forced placement     | 100% · 239ms      | 100% · 94ms      |
+| contradiction        | 100% · **1591ms** | **83%** · 1099ms |
+
+**Three bands per rung** degrades badly:
+
+| Rung                 | Band 1              | Band 2                       | Band 3               |
+| -------------------- | ------------------- | ---------------------------- | -------------------- |
+| completion           | 74-79 · 100%        | 79-84 · 100%                 | 84-97 · 100%         |
+| segment partitioning | 70-86 · 100%        | 86-93 · 100%                 | 93-112 · 100%        |
+| forced placement     | 73-93 · 100%        | 93-101 · 100%                | 101-123 · 100%       |
+| contradiction        | 83-105 · 83% · 1.7s | 105-113 · **50%** · **6.1s** | 113-129 · 83% · 4.7s |
+
+Four things come out of this, and together they argue against D:
+
+1. **Three bands is not viable.** The contradiction rung falls to a 50% hit rate
+   and a 6-second median — against a 10-second cap. Splitting a rung that is
+   only 14% of the space into thirds leaves ~5% per cell, and each candidate
+   there is the expensive kind.
+
+2. **A length constraint costs an order of magnitude at the top rung.** The
+   contradiction tier generates in ~150ms unconstrained; asking for a length band
+   as well takes 1.1-1.6s even with only two bands, and one cell already misses
+   17% of the time.
+
+3. **The control is weak exactly where the distribution is tight.** At the
+   completion rung the shorter band spans 74-80 — six deductions. "Shorter" and
+   "longer" there are not a difference a player could feel.
+
+4. **The bands do not mean the same thing across levels.** "Longer" at the
+   completion rung is 80-97 deductions; "shorter" at forced placement is 73-97 —
+   essentially the same puzzle length. This is inherent to bands defined relative
+   to a rung, and it is honest as far as it goes, but a player choosing "longer"
+   at level 1 and "shorter" at level 3 would get puzzles of the same length and
+   would be right to find that odd.
+
+The benefit being bought is modest: within a level, length varies by roughly
+20-40%. The costs are a tenfold generation slowdown at the level people will most
+want, a cell that misses, a control that does nothing at the easiest level, and
+twice the UI on a phone-sized landing page.
+
+**Chosen: Option A**, and built. Four levels, one per rung, named Easy /
+Medium / Hard / Evil. Length is reported rather than selected.
+
+**Recommendation was: Option A**, with the deduction count displayed rather than
+selected. It keeps every level under ~150ms, keeps the scheme describable in one
+sentence per level, and still surfaces length — so the play experience that
+would justify a length control gets collected either way. If, after playing,
+length turns out to be something worth choosing, D-with-two-bands is a small
+change to come back to; the measurements above are what it would cost.
+
+### What shipped, and the solve stat
+
+The 0-100 rescaling is gone from the code. A rating is now `{ maxTechnique,
+deductions }` — the ladder position and the count, as measured.
+
+Re-rating the premades under the raw measure makes the case for reporting both
+better than any argument did:
+
+| Puzzle       | Hardest rung     | Deductions |
+| ------------ | ---------------- | ---------- |
+| tree         | block capping    | 8          |
+| house        | completion       | 16         |
+| star         | completion       | 34         |
+| cat          | forced placement | 36         |
+| flower       | contradiction    | 37         |
+| chess-knight | contradiction    | 103        |
+
+`flower` and `chess-knight` are the same level and nearly three times apart in
+length; `star` and `flower` are nearly the same length and two rungs apart.
+
+**The completion screen now compares the player's moves to the deductions the
+puzzle requires**, in the spirit of Minesweeper's efficiency stat. The comparison
+is meaningful because the units genuinely match: a solver deduction is one act of
+reading a line and marking what follows, and a player move is the same thing —
+a drag along a row counts once, as does clicking a finished clue to sweep its
+line. Going over 100% is reachable and left uncapped, since one drag can cover
+ground the solver needed several separate deductions to justify.
+
+### Cross-cutting notes
+
+- **Level 4 in options A/B and level 3 in C are the same thing** — the
+  contradiction tier, the one the current generator could not reach at all
+  before this work. At 14% it is the rarest but is still generated in ~150ms.
+- **The bottom of the ladder is thin.** Only 12% of puzzles top out at
+  completion or below, and 1% at gap-too-small. An easiest level needs the
+  generator biased toward dense patterns (fill 0.65-0.7) to hit it cheaply.
+- **Opening generosity is not a third axis** but it is the best predictor of
+  which rung a puzzle needs, and it costs one sweep. It may be worth using as a
+  pre-filter to skip candidates that obviously will not hit the target rung.
+
 ## Requirements
 
 Holding regardless of which model is chosen:
@@ -824,7 +1059,7 @@ calibration script exists to catch.
 what the tiers should be called is deferred until there is play experience —
 and shipping is how that experience gets made. Numbers are ordinal without
 claiming how a puzzle feels, and each level shows a short neutral hint
-("Steady going, few dead ends"). The puzzle's own measured rating is shown once
+("Medium going, few dead ends"). The puzzle's own measured rating is shown once
 it exists, on both axes, so the bands can be judged against real puzzles.
 
 **Cancellation is by `terminate()`, not a cooperative flag.** The spec argued
@@ -935,6 +1170,12 @@ Sketch, pending the decisions above.
    This is cheap to defer: tiering is a thin layer of thresholds over the continuous scores, added
    late. Nothing upstream depends on it — the bake-off can target raw score bands without names, and
    the strategies do not care what the bands are called.
+
+   _Resolved: four levels, one per rung of the ladder, named **Easy / Medium / Hard / Evil**._ The
+   question stopped being a guess once levels were defined as rungs: the count follows from the
+   ladder rather than being chosen, since the four rungs that occur as a maximum at 15x15 are
+   completion, segment partitioning, forced placement and contradiction. Only the labels were a
+   naming decision.
 
 5. **What happens when targeted generation runs out of budget?** The options were: hand back the
    closest candidate found; progressively widen the band as the budget depletes; or surface the

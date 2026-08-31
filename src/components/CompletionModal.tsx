@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { isGeneratedPuzzle } from '../logic/randomPuzzle';
 import { generationService } from '../logic/generation/service';
+import { SolveStats } from './SolveStats';
+import { levelById } from '../logic/generation/levels';
 import type { Puzzle } from '../types';
 
 interface CompletionModalProps {
@@ -56,9 +58,7 @@ export function CompletionModal({
           Puzzle Complete!
         </h2>
 
-        <p className="text-center text-gray-600 mb-6">
-          Congratulations! You solved the puzzle in {moves} move{moves !== 1 ? 's' : ''}.
-        </p>
+        <SolveStats moves={moves} rating={currentPuzzle?.rating} />
 
         {/* Action buttons */}
         <div className="flex flex-col gap-3">
@@ -72,7 +72,7 @@ export function CompletionModal({
                   : 'bg-purple-600 text-white hover:bg-purple-700'
               }`}
             >
-              {isGenerating ? 'Generating…' : `Play Another (level ${lastLevelId})`}
+              {isGenerating ? 'Generating…' : `Play Another (${levelById(lastLevelId).name})`}
             </button>
           )}
           {canWatchReplay && (

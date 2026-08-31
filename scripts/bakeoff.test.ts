@@ -30,8 +30,7 @@ it(
         'med ms'.padStart(8),
         'p90 ms'.padStart(8),
         'cands'.padStart(6),
-        'tech'.padStart(9),
-        'work'.padStart(9),
+        'deductions'.padStart(12),
         'depth1'.padStart(7)
       );
       for (const { name: strategy } of STRATEGIES) {
@@ -43,8 +42,7 @@ it(
           String(s.medianMs).padStart(8),
           String(s.p90Ms).padStart(8),
           String(s.medianCandidates).padStart(6),
-          `${s.techniqueSpread[0]}-${s.techniqueSpread[1]}`.padStart(9),
-          `${s.workSpread[0]}-${s.workSpread[1]}`.padStart(9),
+          `${s.deductionSpread[0]}-${s.deductionSpread[1]}`.padStart(12),
           `${Math.round(s.depth1Rate * 100)}%`.padStart(7)
         );
       }
