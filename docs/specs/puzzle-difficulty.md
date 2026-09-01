@@ -362,7 +362,7 @@ find hard. The obstacle is that single-player data is thin and the feedback loop
 ## Candidate generation strategies
 
 **G1. Pure rejection sampling.** Keep drawing random seeds until the measured score lands in the
-target band. This is what [plan.md](../../plan.md) Phase 8 already sketches. Zero change to pattern
+target band. This is what the project plan already sketched as a "difficulty filter". Zero change to pattern
 generation. Wastes most attempts at the hard end and, per Probe 2, cannot reach the sparsest regimes
 at all.
 
