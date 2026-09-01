@@ -1129,6 +1129,25 @@ Two things worth keeping in mind from this:
   holding. `npm run candidate-cost` measures the worst case and is the guard
   against that.
 
+### The completion modal flashed before the replay
+
+Noticed while screenshotting the new solve stats, and pre-existing rather than
+caused by this work: on winning, the completion modal appeared for a frame
+before the replay animation started.
+
+The cause was starting the replay from an effect. Effects run _after_ the browser
+paints, so the render where `isComplete` flipped true committed with the replay
+not yet started — and that render shows the modal. Deriving the phase during
+render instead means React discards the intermediate render and re-runs it
+before committing, so the state is never painted.
+
+The existing replay tests could not have caught this. They assert the modal is
+"not visible" when the replay starts, but assertions auto-wait, so a modal that
+appears for one frame and disappears still satisfies them. The regression test
+records which of the two elements enters the DOM first, via a `MutationObserver`
+installed before the puzzle is completed — verified to fail with the effect-based
+version and pass with the fix.
+
 ### Two bugs the tests caught, worth keeping tests on
 
 - **Completed lines went unvalidated.** Both solvers skipped lines with no
