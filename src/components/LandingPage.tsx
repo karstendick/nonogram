@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Puzzle } from '../types';
-import { generateRandomPuzzle } from '../logic/randomPuzzle';
+import { LevelSelector } from './LevelSelector';
+import { GenerationProgress } from './GenerationProgress';
+import { generationService, speculateWhenIdle } from '../logic/generation/service';
+import type { GenerationStats } from '../logic/generation/strategy';
+import { useGameStore } from '../store/gameStore';
 
 interface LandingPageProps {
   onPuzzleSelected: (puzzle: Puzzle) => void;
@@ -13,25 +17,40 @@ export function LandingPage({
   onNavigateToSeedEntry,
   onNavigateToPremade,
 }: LandingPageProps) {
-  const [size, setSize] = useState<5 | 10 | 15>(15);
+  const lastLevelId = useGameStore((state) => state.lastLevelId);
+  const setLastLevelId = useGameStore((state) => state.setLastLevelId);
+  const [levelId, setLevelId] = useState(lastLevelId);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [stats, setStats] = useState<GenerationStats | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  // Start generating before being asked, using the time the player spends
+  // reading this page and choosing. Deferred to idle so it cannot slow the
+  // page's first paint — that would trade a wait nobody notices for one they do.
+  useEffect(() => {
+    speculateWhenIdle(lastLevelId);
+  }, [lastLevelId]);
+
+  // Changing the level makes any in-flight speculation useless, so start again
+  // on the new one rather than leaving the player to wait for it later.
+  const handleLevelChange = (next: number) => {
+    setLevelId(next);
+    generationService.speculate(next);
+  };
 
   const handleQuickPlay = () => {
     setIsGenerating(true);
+    setStats(null);
+    setFailed(false);
+    setLastLevelId(levelId);
 
-    // Run generation in a timeout to allow UI to update
-    setTimeout(() => {
-      const puzzle = generateRandomPuzzle(size);
-
-      setIsGenerating(false);
-
-      if (puzzle) {
-        onPuzzleSelected(puzzle);
-      } else {
-        // Retry if every seed we tried failed to produce a valid puzzle
-        handleQuickPlay();
-      }
-    }, 10);
+    void generationService
+      .take(levelId, (progress) => setStats(progress.stats))
+      .then((result) => {
+        setIsGenerating(false);
+        if (result) onPuzzleSelected(result.puzzle);
+        else setFailed(true);
+      });
   };
 
   return (
@@ -48,29 +67,10 @@ export function LandingPage({
             <span className="text-2xl">🎲</span>
             <h2 className="text-xl font-bold text-gray-800">Quick Play</h2>
           </div>
-          <p className="text-sm text-gray-600 mb-4">Start a random puzzle immediately</p>
+          <p className="text-sm text-gray-600 mb-4">Start a random 15×15 puzzle</p>
 
-          {/* Size selector */}
           <div className="mb-4">
-            <div className="text-sm font-medium text-gray-700 mb-2">Size:</div>
-            <div className="flex gap-4 justify-center">
-              {([5, 10, 15] as const).map((s) => (
-                <label key={s} className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="size"
-                    value={s}
-                    checked={size === s}
-                    onChange={() => setSize(s)}
-                    disabled={isGenerating}
-                    className="mr-2 cursor-pointer"
-                  />
-                  <span className="text-sm text-gray-700 font-medium">
-                    {s}×{s}
-                  </span>
-                </label>
-              ))}
-            </div>
+            <LevelSelector value={levelId} onChange={handleLevelChange} disabled={isGenerating} />
           </div>
 
           {/* Play button */}
@@ -83,8 +83,16 @@ export function LandingPage({
                 : 'bg-purple-600 text-white hover:bg-purple-700 shadow-md hover:shadow-lg'
             }`}
           >
-            {isGenerating ? 'Generating...' : 'Play Random Puzzle'}
+            {isGenerating ? 'Generating…' : 'Play Random Puzzle'}
           </button>
+
+          {isGenerating && <GenerationProgress stats={stats} />}
+
+          {failed && (
+            <p className="mt-3 text-sm text-red-700 text-center">
+              Could not find a puzzle at that level. Try again, or pick another level.
+            </p>
+          )}
         </div>
 
         {/* Enter Seed Card */}

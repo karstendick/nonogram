@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { GameBoard } from './components/GameBoard';
 import { ModeToggle } from './components/ModeToggle';
 import { CompletionModal } from './components/CompletionModal';
@@ -9,6 +9,7 @@ import { SolveReplay } from './components/SolveReplay';
 import { useGameStore } from './store/gameStore';
 import { isGeneratedPuzzle } from './logic/randomPuzzle';
 import { buildReplaySequence } from './logic/replay';
+import { RatingBadge } from './components/RatingBadge';
 import type { Puzzle } from './types';
 
 // Component to display and copy puzzle seed
@@ -58,7 +59,7 @@ function App() {
   // Replay of the player's solve, shown before the completion modal
   const [replayPhase, setReplayPhase] = useState<'idle' | 'playing' | 'done'>('idle');
   const [forceReplay, setForceReplay] = useState(false);
-  const wasComplete = useRef(isComplete);
+  const [wasComplete, setWasComplete] = useState(isComplete);
 
   const replaySequence = useMemo(
     () =>
@@ -71,15 +72,22 @@ function App() {
   // Start the replay when the puzzle is solved during this session. A puzzle
   // that was already complete on load doesn't replay — that path goes to the
   // landing page anyway.
-  useEffect(() => {
-    if (isComplete && !wasComplete.current) {
+  //
+  // Adjusted during render rather than in an effect. An effect runs after the
+  // browser has already painted, so there was one frame where the puzzle was
+  // complete but the replay had not started — long enough to flash the
+  // completion modal before the animation. React discards this render and
+  // re-runs it before committing anything, so the intermediate state is never
+  // shown.
+  if (isComplete !== wasComplete) {
+    setWasComplete(isComplete);
+    if (isComplete) {
       setForceReplay(false);
       setReplayPhase('playing');
-    } else if (!isComplete) {
+    } else {
       setReplayPhase('idle');
     }
-    wasComplete.current = isComplete;
-  }, [isComplete]);
+  }
 
   const startReplay = () => {
     setForceReplay(true);
@@ -88,7 +96,7 @@ function App() {
 
   const handlePuzzleSelected = (puzzle: Puzzle) => {
     loadPuzzle(puzzle);
-    wasComplete.current = false;
+    setWasComplete(false);
     setReplayPhase('idle');
     setView('game');
   };
@@ -170,8 +178,11 @@ function App() {
               ← Back
             </button>
             {currentPuzzle && (
-              <div className="text-xs text-gray-600">
-                {currentPuzzle.width} × {currentPuzzle.height}
+              <div className="text-xs text-gray-600 text-right">
+                <div>
+                  {currentPuzzle.width} × {currentPuzzle.height}
+                </div>
+                <RatingBadge rating={currentPuzzle.rating} className="text-[10px] leading-tight" />
               </div>
             )}
           </div>
@@ -190,7 +201,7 @@ function App() {
               <div className="text-sm sm:text-base text-gray-600">
                 <span className="font-semibold">{currentPuzzle.title}</span>
                 <span className="mx-2">•</span>
-                <span className="capitalize">{currentPuzzle.difficulty}</span>
+                <RatingBadge rating={currentPuzzle.rating} />
                 <span className="mx-2">•</span>
                 <span>
                   {currentPuzzle.width} × {currentPuzzle.height}

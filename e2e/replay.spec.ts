@@ -52,6 +52,35 @@ test.describe('Solve replay', () => {
     await expect(page.getByText('Replaying your solve…')).not.toBeVisible();
   });
 
+  test('does not flash the completion modal before the replay starts', async ({ page }) => {
+    await openHousePuzzle(page);
+
+    // Record whichever of the two paints first. Plain assertions cannot catch
+    // this: they auto-wait, so a modal that appears for one frame and vanishes
+    // still satisfies "eventually not visible". Deriving the replay phase in an
+    // effect used to leave exactly that gap, because effects run after paint.
+    await page.evaluate(() => {
+      const w = window as unknown as { __firstSeen: string | null };
+      w.__firstSeen = null;
+      const check = () => {
+        if (w.__firstSeen) return;
+        const text = document.body.textContent ?? '';
+        if (text.includes('Puzzle Complete!')) w.__firstSeen = 'modal';
+        else if (text.includes('Replaying your solve')) w.__firstSeen = 'replay';
+      };
+      new MutationObserver(check).observe(document.body, { childList: true, subtree: true });
+      check();
+    });
+
+    await solveHouse(page);
+    await expect(page.getByText('Replaying your solve…')).toBeVisible();
+
+    const firstSeen = await page.evaluate(
+      () => (window as unknown as { __firstSeen: string | null }).__firstSeen
+    );
+    expect(firstSeen).toBe('replay');
+  });
+
   test('replays again from the completion modal', async ({ page }) => {
     await openHousePuzzle(page);
     await solveHouse(page);

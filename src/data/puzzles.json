@@ -3,37 +3,51 @@
     {
       "id": "heart",
       "title": "Heart",
-      "difficulty": "easy",
-      "solution": [".##.##.", "#######", "#######", ".#####.", "..###..", "...#...", "......."]
+      "solution": [".##.##.", "#######", "#######", ".#####.", "..###..", "...#...", "......."],
+      "rating": {
+        "maxTechnique": 3,
+        "deductions": 20
+      }
     },
     {
       "id": "house",
       "title": "House",
-      "difficulty": "easy",
-      "solution": ["..#..", ".###.", "#####", "#...#", "#...#"]
+      "solution": ["..#..", ".###.", "#####", "#...#", "#...#"],
+      "rating": {
+        "maxTechnique": 5,
+        "deductions": 16
+      }
     },
     {
       "id": "tree",
       "title": "Tree",
-      "difficulty": "easy",
-      "solution": ["..#..", ".###.", "#####", "..#..", "..#.."]
+      "solution": ["..#..", ".###.", "#####", "..#..", "..#.."],
+      "rating": {
+        "maxTechnique": 3,
+        "deductions": 8
+      }
     },
     {
       "id": "cross",
       "title": "Cross",
-      "difficulty": "easy",
-      "solution": ["..#..", "..#..", "#####", "..#..", "..#.."]
+      "solution": ["..#..", "..#..", "#####", "..#..", "..#.."],
+      "rating": {
+        "maxTechnique": 3,
+        "deductions": 9
+      }
     },
     {
       "id": "diamond",
       "title": "Diamond",
-      "difficulty": "easy",
-      "solution": ["..#..", ".###.", "#####", ".###.", "..#.."]
+      "solution": ["..#..", ".###.", "#####", ".###.", "..#.."],
+      "rating": {
+        "maxTechnique": 5,
+        "deductions": 9
+      }
     },
     {
       "id": "sailboat",
       "title": "Sailboat",
-      "difficulty": "medium",
       "solution": [
         "....#.....",
         "...###....",
@@ -45,12 +59,15 @@
         "...###....",
         "....#.....",
         ".........#"
-      ]
+      ],
+      "rating": {
+        "maxTechnique": 7,
+        "deductions": 40
+      }
     },
     {
       "id": "star",
       "title": "Star",
-      "difficulty": "medium",
       "solution": [
         "....#.....",
         "...###....",
@@ -62,12 +79,15 @@
         "..#...#...",
         "..........",
         ".........."
-      ]
+      ],
+      "rating": {
+        "maxTechnique": 5,
+        "deductions": 34
+      }
     },
     {
       "id": "cat",
       "title": "Cat",
-      "difficulty": "medium",
       "solution": [
         "#........#",
         "##......##",
@@ -79,12 +99,15 @@
         ".#......#.",
         "..........",
         ".........."
-      ]
+      ],
+      "rating": {
+        "maxTechnique": 7,
+        "deductions": 36
+      }
     },
     {
       "id": "flower",
       "title": "Flower",
-      "difficulty": "hard",
       "solution": [
         ".....#...#.....",
         "....###.###....",
@@ -101,12 +124,15 @@
         "......###......",
         ".....#####.....",
         "....#######...."
-      ]
+      ],
+      "rating": {
+        "maxTechnique": 8,
+        "deductions": 37
+      }
     },
     {
       "id": "chess-knight",
       "title": "Chess Knight",
-      "difficulty": "hard",
       "solution": [
         "....#####......",
         "...#######.....",
@@ -123,7 +149,11 @@
         ".....####......",
         "......##.......",
         "..............."
-      ]
+      ],
+      "rating": {
+        "maxTechnique": 8,
+        "deductions": 103
+      }
     }
   ]
 }

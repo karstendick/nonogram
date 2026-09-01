@@ -2,6 +2,7 @@ import { Puzzle } from '../types';
 import puzzlesData from '../data/puzzles.json';
 import type { PuzzleCollection } from '../types';
 import { parsePuzzle } from '../logic/puzzleParser';
+import { RatingBadge } from './RatingBadge';
 
 interface PuzzleSelectorProps {
   onPuzzleSelected: (puzzle: Puzzle) => void;
@@ -35,7 +36,7 @@ export function PuzzleSelector({ onPuzzleSelected, currentPuzzleId }: PuzzleSele
                   {puzzle.width}×{puzzle.height}
                 </span>
               </div>
-              <div className="text-sm text-gray-600 capitalize mt-1">{puzzle.difficulty}</div>
+              <RatingBadge rating={puzzle.rating} className="text-sm mt-1" />
             </button>
           );
         })}
