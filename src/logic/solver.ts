@@ -94,7 +94,37 @@ function isCompatible(placement: boolean[], knownCells: SolverCell[]): boolean {
  * @param knownCells Current known cell states
  * @returns Updated cell states with newly deduced cells
  */
+/**
+ * Cache of line solves.
+ *
+ * Enumerating placements is the most expensive thing in the solver, and the
+ * same (clues, line) states recur enormously — a depth-1 search re-propagates
+ * almost the same grid hundreds of times, and most lines are untouched between
+ * one hypothesis and the next. Caching turns that repetition into lookups.
+ *
+ * Bounded so a long session cannot grow it without limit; the whole map is
+ * dropped when it fills rather than tracking recency, which is cheap and good
+ * enough for a cache with this much locality.
+ */
+const CACHE_LIMIT = 20000;
+const solveCache = new Map<string, SolverCell[]>();
+
+function cacheKey(clues: number[], knownCells: SolverCell[]): string {
+  return `${clues.join(',')}|${knownCells.join('')}`;
+}
+
 export function solveArray(clues: number[], knownCells: SolverCell[]): SolverCell[] {
+  const key = cacheKey(clues, knownCells);
+  const cached = solveCache.get(key);
+  if (cached) return [...cached];
+
+  const result = computeSolvedArray(clues, knownCells);
+  if (solveCache.size >= CACHE_LIMIT) solveCache.clear();
+  solveCache.set(key, [...result]);
+  return result;
+}
+
+function computeSolvedArray(clues: number[], knownCells: SolverCell[]): SolverCell[] {
   const length = knownCells.length;
 
   // Generate all possible placements

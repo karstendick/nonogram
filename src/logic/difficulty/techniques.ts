@@ -460,36 +460,59 @@ export const LADDER: { technique: Technique; detect: LineTechnique }[] = [
   { technique: Technique.ForcedPlacement, detect: forcedPlacement },
 ];
 
-/** True if the clues can still be placed in the line at all. */
+/**
+ * True if the clues can still be placed in the line at all.
+ *
+ * A memoised scan rather than backtracking. The expensive case is proving that
+ * NO placement exists, which is exactly what refuting a depth-1 hypothesis
+ * needs, and naive backtracking explores the whole space to do it — one hard
+ * candidate was measured taking over fifteen minutes. This is O(clues x length)
+ * states, so the refutation is as cheap as the confirmation.
+ */
 export function hasValidPlacement(clues: number[], line: SolverCell[]): boolean {
   const real = realClues(clues);
   const n = line.length;
 
-  const place = (clueIndex: number, from: number): boolean => {
-    if (clueIndex === real.length) {
-      for (let i = from; i < n; i++) if (line[i] === SolverCell.Filled) return false;
-      return true;
-    }
-    const size = real[clueIndex];
-    const remaining = minSpan(real.slice(clueIndex));
+  // noFilledFrom[p] — true if line[p..] contains no filled cell, so the
+  // remaining line can legitimately be left empty.
+  const noFilledFrom: boolean[] = Array<boolean>(n + 1).fill(true);
+  for (let p = n - 1; p >= 0; p--) {
+    noFilledFrom[p] = noFilledFrom[p + 1] && line[p] !== SolverCell.Filled;
+  }
 
-    for (let start = from; start + remaining <= n; start++) {
-      // Cells skipped before this block must not be filled.
-      if (start > from && line[start - 1] === SolverCell.Filled) return false;
-      let fits = true;
-      for (let k = 0; k < size; k++) {
-        if (line[start + k] === SolverCell.Empty) {
-          fits = false;
-          break;
-        }
-      }
-      if (!fits) continue;
-      const after = start + size;
-      if (after < n && line[after] === SolverCell.Filled) continue;
-      if (place(clueIndex + 1, after + 1)) return true;
-    }
-    return false;
+  // fits[i][p] — can block i be laid down starting exactly at p?
+  const canPlaceAt = (size: number, start: number): boolean => {
+    if (start + size > n) return false;
+    for (let k = 0; k < size; k++) if (line[start + k] === SolverCell.Empty) return false;
+    // A block must be followed by a gap, or the line's end.
+    return start + size === n || line[start + size] !== SolverCell.Filled;
   };
 
-  return place(0, 0);
+  // memo[i][p] — can clues[i..] be placed within line[p..]?
+  const memo: (boolean | undefined)[][] = Array.from({ length: real.length + 1 }, () =>
+    Array<boolean | undefined>(n + 1).fill(undefined)
+  );
+
+  const solve = (i: number, p: number): boolean => {
+    // Past the end of the line: fine only if every block has been placed.
+    if (p >= n) return i === real.length;
+    if (i === real.length) return noFilledFrom[p];
+
+    const cached = memo[i][p];
+    if (cached !== undefined) return cached;
+
+    let result = false;
+    if (canPlaceAt(real[i], p) && solve(i + 1, p + real[i] + 1)) {
+      result = true;
+    } else if (line[p] !== SolverCell.Filled) {
+      // Leave p empty and try the block one cell later. A filled cell cannot be
+      // skipped — some block has to cover it.
+      result = solve(i, p + 1);
+    }
+
+    memo[i][p] = result;
+    return result;
+  };
+
+  return solve(0, 0);
 }

@@ -157,9 +157,16 @@ describe('strategies', () => {
     // Unreachable target, so the budget is what stops it.
     const impossible: DifficultyTarget = { size: 10, rung: Technique.Overlap };
     const started = Date.now();
-    g2KnobBiased(impossible, 'budget', { budgetMs: 600 });
-    expect(Date.now() - started).toBeLessThan(3000);
-  });
+    const result = g2KnobBiased(impossible, 'budget', { budgetMs: 600 });
+    const elapsed = Date.now() - started;
+
+    // It ran until the budget was gone rather than giving up early...
+    expect(result.stats.elapsedMs).toBeGreaterThanOrEqual(600);
+    // ...and stopped near it. The bound is loose on purpose: the real failure
+    // this guards against is a single candidate overrunning by tens of
+    // seconds, and a tight bound only flakes on a loaded machine.
+    expect(elapsed).toBeLessThan(8000);
+  }, 20000);
 
   it('returns the closest candidate rather than nothing when it misses', () => {
     // Unreachable by construction: rungs below completion are folded up to it,

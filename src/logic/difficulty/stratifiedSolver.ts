@@ -207,39 +207,68 @@ export function traceSolve(
   return finish(false);
 }
 
-/** The grid a traced solve arrives at, for callers that need the cells rather than the trace. */
+/**
+ * Propagate to a fixpoint, or return null if the puzzle contradicts itself.
+ *
+ * A worklist rather than repeated full passes. This is the hot path by a wide
+ * margin: every depth-1 hypothesis calls it, and re-solving all thirty lines
+ * each pass — placement enumeration included — when only one line changed made
+ * a single hard candidate take tens of seconds. Only lines whose cells actually
+ * changed get revisited.
+ */
 export function solveToFixpoint(puzzle: LineClues, start?: SolverCell[][]): SolverCell[][] | null {
   const { rowClues, columnClues, width, height } = puzzle;
   const grid = start ? start.map((row) => [...row]) : blankGrid(width, height);
 
-  for (let pass = 0; pass < width * height + 1; pass++) {
-    let changed = false;
-    for (const kind of ['row', 'column'] as const) {
-      const count = kind === 'row' ? height : width;
-      for (let index = 0; index < count; index++) {
-        const line = readLine(grid, kind, index);
-        const clues = kind === 'row' ? rowClues[index] : columnClues[index];
-        if (!line.includes(SolverCell.Unknown)) {
-          // Still has to be checked: this is how a depth-1 hypothesis that
-          // completes a line wrongly gets refuted.
-          if (!hasValidPlacement(clues, line)) return null;
-          continue;
-        }
-        for (const rung of LADDER) {
-          const found = rung.detect(clues, line);
-          if (!found) continue;
-          for (const cell of found.cells) {
-            if (kind === 'row') grid[index][cell.index] = cell.state;
-            else grid[cell.index][index] = cell.state;
-            line[cell.index] = cell.state;
-          }
-          changed = true;
-          break;
-        }
-        if (!hasValidPlacement(clues, readLine(grid, kind, index))) return null;
-      }
+  const cluesFor = (kind: LineKind, index: number) =>
+    kind === 'row' ? rowClues[index] : columnClues[index];
+
+  // Encode a line as one number so the worklist can dedupe cheaply.
+  const key = (kind: LineKind, index: number) => (kind === 'row' ? index : height + index);
+  const queued = new Set<number>();
+  const worklist: { kind: LineKind; index: number }[] = [];
+
+  const enqueue = (kind: LineKind, index: number) => {
+    const k = key(kind, index);
+    if (queued.has(k)) return;
+    queued.add(k);
+    worklist.push({ kind, index });
+  };
+
+  for (let r = 0; r < height; r++) enqueue('row', r);
+  for (let c = 0; c < width; c++) enqueue('column', c);
+
+  while (worklist.length > 0) {
+    const { kind, index } = worklist.shift()!;
+    queued.delete(key(kind, index));
+
+    const clues = cluesFor(kind, index);
+    const line = readLine(grid, kind, index);
+
+    if (!line.includes(SolverCell.Unknown)) {
+      // Still has to be checked: this is how a depth-1 hypothesis that completes
+      // a line wrongly gets refuted.
+      if (!hasValidPlacement(clues, line)) return null;
+      continue;
     }
-    if (!changed) break;
+
+    for (const rung of LADDER) {
+      const found = rung.detect(clues, line);
+      if (!found) continue;
+      const across: LineKind = kind === 'row' ? 'column' : 'row';
+      for (const cell of found.cells) {
+        if (kind === 'row') grid[index][cell.index] = cell.state;
+        else grid[cell.index][index] = cell.state;
+        line[cell.index] = cell.state;
+        // Only the lines crossing a changed cell can have learned anything.
+        enqueue(across, cell.index);
+      }
+      enqueue(kind, index);
+      break;
+    }
+
+    if (!hasValidPlacement(clues, readLine(grid, kind, index))) return null;
   }
+
   return grid;
 }

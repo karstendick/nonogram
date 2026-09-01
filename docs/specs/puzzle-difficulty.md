@@ -1088,6 +1088,47 @@ doing CPU-heavy generation starve one another badly enough to look like a hang:
 the same tests take 30s+ and time out in parallel, and about 3s sequentially.
 The e2e file is marked to run its tests in order.
 
+### The generator could hang for minutes on a single candidate
+
+CI caught what local runs did not: generating an Evil puzzle timed out on the
+slower WebKit runner. The cause was a real defect, not a slow test.
+
+The 10-second budget is only checked _between_ candidates, so a single expensive
+candidate can blow through it. Measuring the Evil preset over 200 candidates
+found exactly that — one rejected candidate took **27 seconds**, and after an
+unrelated change, **17.6 minutes**. Accepted candidates were never the problem
+(max 984ms); the cost was all in _rejecting_ the ambiguous ones.
+
+Three fixes, in order of how much they mattered:
+
+1. **`solveArray` is memoised.** Enumerating placements is the most expensive
+   thing the solver does, and a depth-1 search re-propagates nearly the same grid
+   hundreds of times — most lines untouched between one hypothesis and the next.
+   Caching turned that repetition into lookups and was worth about 100x on the
+   worst case alone.
+2. **`hasValidPlacement` became a memoised scan instead of backtracking.**
+   Proving that _no_ placement exists is precisely what refuting a hypothesis
+   needs, and backtracking explored the entire space to do it. The DP is
+   O(clues x length), so refutation is now as cheap as confirmation. This is what
+   removed the 17-minute case.
+3. **`solveToFixpoint` became a worklist.** Only lines whose cells actually
+   changed get revisited, rather than re-solving all thirty every pass.
+
+Worst-case single candidate: **17.6 minutes → 265ms**. Median 42ms → 12ms.
+
+Two things worth keeping in mind from this:
+
+- **Any bound on generation must be deterministic, not wall-clock.** A time-based
+  cutoff would make the same seed produce different puzzles on different
+  hardware, breaking seed sharing (Requirement 1). That ruled out the obvious
+  fix and pushed toward making the work itself cheap, which was the better
+  answer anyway.
+- **The budget still is not enforced within a candidate.** 265ms is comfortably
+  inside it, so this is no longer urgent, but the structural gap remains: if a
+  future change makes candidates expensive again, the cap will silently stop
+  holding. `npm run candidate-cost` measures the worst case and is the guard
+  against that.
+
 ### Two bugs the tests caught, worth keeping tests on
 
 - **Completed lines went unvalidated.** Both solvers skipped lines with no

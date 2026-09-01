@@ -219,4 +219,37 @@ describe('hasValidPlacement', () => {
   it('accepts an empty line with no blocks', () => {
     expect(hasValidPlacement([0], line('.....'))).toBe(true);
   });
+
+  // The check is a memoised scan rather than backtracking, because proving that
+  // NO placement exists is exactly what refuting a depth-1 hypothesis needs and
+  // the naive version explored the whole space to do it — one hard candidate was
+  // measured taking over fifteen minutes. These pin down the rewrite.
+  it('requires every filled cell to be covered by some block', () => {
+    expect(hasValidPlacement([2], line('#...#'))).toBe(false);
+    expect(hasValidPlacement([1, 1], line('#...#'))).toBe(true);
+  });
+
+  it('respects gaps between blocks', () => {
+    expect(hasValidPlacement([1, 1], line('##...'))).toBe(false);
+    expect(hasValidPlacement([2], line('##...'))).toBe(true);
+  });
+
+  it('will not place a block over a known empty cell', () => {
+    expect(hasValidPlacement([3], line('#.###'))).toBe(false);
+    expect(hasValidPlacement([1, 3], line('#.###'))).toBe(true);
+  });
+
+  it('rejects blocks that overrun the line', () => {
+    expect(hasValidPlacement([3, 3], line('??????'))).toBe(false);
+    expect(hasValidPlacement([3, 2], line('??????'))).toBe(true);
+  });
+
+  it('settles a wide unsatisfiable line quickly rather than exploring it', () => {
+    // Fifteen wide with many small blocks is the shape that used to blow up:
+    // lots of partial placements, none of which can be completed.
+    const wide = line('#.#.#.#.#.#.#.#');
+    const started = Date.now();
+    expect(hasValidPlacement([2, 2, 2, 2], wide)).toBe(false);
+    expect(Date.now() - started).toBeLessThan(1000);
+  });
 });

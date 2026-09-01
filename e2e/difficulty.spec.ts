@@ -78,11 +78,12 @@ test('the completion screen compares your moves to the deductions required', asy
     }
   }
 
-  // The replay runs first; skip it to reach the completion screen.
-  const skip = page.getByRole('button', { name: /Skip/i });
-  if (await skip.isVisible().catch(() => false)) await skip.click();
+  // The solve replays before the completion screen; skip it. Waiting for the
+  // Skip button rather than probing for it, since it takes a moment to appear
+  // and a race here made this test depend on a one-frame flash of the modal.
+  await page.getByRole('button', { name: /Skip/i }).click({ timeout: 20000 });
 
-  await expect(page.getByText('Your moves')).toBeVisible({ timeout: 20000 });
+  await expect(page.getByText('Your moves')).toBeVisible({ timeout: 10000 });
   await expect(page.getByText('Deductions needed')).toBeVisible();
   await expect(page.getByText('Efficiency')).toBeVisible();
 });
