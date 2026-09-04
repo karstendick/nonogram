@@ -28,11 +28,14 @@ test.describe('difficulty selection', () => {
 
     await page.getByRole('button', { name: /Play Random Puzzle/i }).click();
 
-    // The board arrives, and the puzzle reports its measured difficulty on both
-    // axes rather than a single label.
+    // The board arrives at the level that was asked for. While it is unsolved
+    // the header names only that level: the technique it needs and how many
+    // deductions it takes are the player's to find out.
     await expect(page.locator('[data-row="0"][data-col="0"]')).toBeVisible({ timeout: 30000 });
     // The mobile and desktop headers are both in the DOM, one hidden by CSS.
-    await expect(page.getByLabel(/^Difficulty: needs /).locator('visible=true')).toBeVisible();
+    await expect(page.getByLabel('Difficulty: Hard').locator('visible=true')).toBeVisible();
+    await expect(page.getByLabel(/^Difficulty: needs /)).toHaveCount(0);
+    await expect(page.getByText(/deductions/)).toHaveCount(0);
   });
 
   test('generating the hardest level keeps the page responsive', async ({ page }) => {
@@ -46,7 +49,9 @@ test.describe('difficulty selection', () => {
       page.getByRole('button', { name: /Play Random Puzzle|Generating/i })
     ).toBeVisible();
     await expect(page.locator('[data-row="0"][data-col="0"]')).toBeVisible({ timeout: 30000 });
-    await expect(page.getByLabel(/^Difficulty: needs contradiction/).first()).toBeAttached();
+    // Evil is the level whose rung is reasoning by contradiction, so the name
+    // proves what the technique used to
+    await expect(page.getByLabel('Difficulty: Evil').first()).toBeAttached();
   });
 
   test('remembers the level across a reload', async ({ page }) => {

@@ -3,6 +3,7 @@ import { render, screen, act, fireEvent } from '@testing-library/react';
 import App from '../src/App';
 import { useGameStore } from '../src/store/gameStore';
 import { CellState } from '../src/types';
+import { Technique } from '../src/logic/difficulty/types';
 import type { Puzzle } from '../src/types';
 
 const createTestPuzzle = (): Puzzle => ({
@@ -82,5 +83,48 @@ describe('App - solve replay', () => {
     render(<App />);
 
     expect(screen.queryByText('Replaying your solve…')).not.toBeInTheDocument();
+  });
+});
+
+describe('App - difficulty in the header', () => {
+  const createRatedPuzzle = (): Puzzle => ({
+    ...createTestPuzzle(),
+    rating: { maxTechnique: Technique.Depth1Contradiction, deductions: 115 },
+  });
+
+  beforeEach(() => {
+    localStorage.clear();
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+    useGameStore.getState().loadPuzzle(createRatedPuzzle());
+  });
+
+  // Both headers are in the DOM at once; CSS hides one, and jsdom applies none
+  it('does not give away the technique or the deduction count while playing', () => {
+    render(<App />);
+
+    expect(screen.getAllByLabelText('Difficulty: Evil').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/deductions/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/contradiction/)).not.toBeInTheDocument();
+  });
+
+  // The rating comes back as the replay starts, which is after the puzzle is solved
+  it('shows the full rating once the puzzle is solved', () => {
+    render(<App />);
+
+    solvePuzzle();
+
+    expect(
+      screen.getAllByLabelText(/^Difficulty: needs contradiction, 115 deductions$/).length
+    ).toBeGreaterThan(0);
+    expect(screen.queryByLabelText('Difficulty: Evil')).not.toBeInTheDocument();
   });
 });
