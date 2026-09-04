@@ -13,6 +13,8 @@ jobs:
 
     permissions:
       contents: write
+      # Reading the Pages build status, to tell "pushed" from "published"
+      pages: read
 
     steps:
       - name: Checkout code
@@ -32,7 +34,8 @@ jobs:
         env:
           VITE_BASE_PATH: /nonogram/
 
-      - name: Deploy to GitHub Pages
+      - name: Push build to gh-pages
+        id: push-build
         run: |
           # Configure git
           git config --global user.name "github-actions[bot]"
@@ -68,5 +71,62 @@ jobs:
           git commit -m "Deploy main @ ${{ github.sha }}" || echo "No changes to commit"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages
 
+          # What the next step waits for GitHub to publish. If there was nothing
+          # to commit this is the previous deploy, which is already built — so
+          # the wait returns immediately rather than hanging.
+          echo "pages_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # The push above only lands the build on the gh-pages branch. GitHub then
+      # runs its own pages-build-deployment to publish it, and that is what makes
+      # the site change. Without this wait the job goes green up to a minute
+      # before anything is actually live, which reads as a deploy that did
+      # nothing.
+      - name: Wait for GitHub Pages to publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          TARGET_SHA: ${{ steps.push-build.outputs.pages_sha }}
+        run: |
+          set -uo pipefail
+          deadline=$((SECONDS + 300))
+          failures=0
+
+          while ((SECONDS < deadline)); do
+            # pipefail keeps gh's exit status; tr keeps the error on one line,
+            # since a multi-line ::warning:: is unreadable
+            if ! build=$(gh api "repos/$REPO/pages/builds/latest" 2>&1 | tr '\n' ' '); then
+              # Tolerate a hiccup, but do not fail a good deploy over a status check
+              failures=$((failures + 1))
+              if ((failures >= 3)); then
+                echo "::warning::Could not read the Pages build status: $build"
+                echo "::warning::The build was pushed to gh-pages regardless; check the site by hand."
+                exit 0
+              fi
+              sleep 10
+              continue
+            fi
+            failures=0
+
+            status=$(jq -r '.status' <<<"$build")
+            commit=$(jq -r '.commit' <<<"$build")
+            echo "pages build ${commit:0:8} is $status (waiting for ${TARGET_SHA:0:8})"
+
+            if [ "$commit" = "$TARGET_SHA" ]; then
+              case "$status" in
+                built) exit 0 ;;
+                errored)
+                  echo "::error::GitHub Pages failed to build $commit"
+                  exit 1
+                  ;;
+              esac
+            fi
+
+            sleep 10
+          done
+
+          echo "::warning::Timed out after 5 minutes waiting for Pages to publish ${TARGET_SHA:0:8}."
+
       - name: Deployment complete
-        run: echo "::notice::Deployed to https://karstendick.github.io/nonogram/"
+        run: |
+          echo "::notice::Live at https://karstendick.github.io/nonogram/"
+          echo "::notice::index.html is served with max-age=600, so the CDN edge may hand out the previous page for up to 10 more minutes."
