@@ -109,6 +109,20 @@ existing `includeAssets` entry honest.
 - Install the app on a phone from the deployed site and confirm the home-screen icon (requirement 5,
   manual).
 
+## Implementation notes (as built)
+
+The automated check is `tests/icons.test.ts`, which asserts against `public/` and the declarations in
+`vite.config.ts` and `index.html` rather than against `dist/` — building inside a unit test would put
+a Vite build in the path of `npm test` for a check that is really "does the file we promised exist".
+It reads the config as text, since `VitePWA()` returns constructed plugins rather than the options it
+was given. The `dist/` assertions in the plan above were run by hand instead: the icon href comes out
+as `/nonogram/favicon.svg`, the manifest carries all three icon entries, and every declared file is
+copied into the build.
+
+The masters are `public/icon.svg`, `public/icon-maskable.svg` and `public/favicon.svg`, generated
+from one 5×5 pattern at three insets — the favicon gives up its margin, the maskable one pulls the
+motif into the safe zone.
+
 ## Open Questions
 
 - `theme_color` and the `index.html` `theme-color` meta are both `#ffffff`. Should they become the

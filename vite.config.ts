@@ -26,7 +26,7 @@ export default defineConfig({
         // the production index.html, serving a stale app under a preview URL.
         navigateFallbackDenylist: [/\/preview\//],
       },
-      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
         name: 'Nonogram Puzzle Game',
         short_name: 'Nonogram',
@@ -42,6 +42,14 @@ export default defineConfig({
             src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
+          },
+          // Android crops install icons to the launcher's shape. Without a
+          // maskable entry it crops this set and clips the artwork.
+          {
+            src: 'pwa-maskable-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
           },
         ],
       },
