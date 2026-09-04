@@ -12,8 +12,11 @@ interface CellProps {
   // fade in as they appear.
   interactive?: boolean;
   animateMarks?: boolean;
-  onCellClick: (row: number, col: number, isRightClick: boolean) => void;
-  onCellDragStart: (row: number, col: number, isRightClick: boolean) => void;
+  // Both callbacks take the player's intent, not which button produced it:
+  // right-click and shift+left-click are the same gesture as far as the grid
+  // is concerned.
+  onCellClick: (row: number, col: number, markEmpty: boolean) => void;
+  onCellDragStart: (row: number, col: number, markEmpty: boolean) => void;
   onCellDragEnter: (row: number, col: number) => void;
 }
 
@@ -39,8 +42,10 @@ export function Cell({
       return;
     }
     e.preventDefault();
-    // Start drag on mouse down (this handles both clicks and drags)
-    onCellDragStart(row, col, e.button === 2); // button 2 = right click
+    // Start drag on mouse down (this handles both clicks and drags).
+    // Right-click (button 2) or shift + left-click both mean "mark empty" —
+    // right-dragging is awkward or impossible on many trackpads.
+    onCellDragStart(row, col, e.button === 2 || e.shiftKey);
   };
 
   const handleContextMenu = (e: React.MouseEvent) => {

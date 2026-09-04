@@ -268,8 +268,8 @@ function App() {
           </button>
           <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg whitespace-nowrap shadow-lg pointer-events-none">
             <div className="text-center">
-              <span className="font-semibold">Desktop:</span> Left-click to fill, right-click to
-              mark empty
+              <span className="font-semibold">Desktop:</span> Left-click to fill; right-click or
+              shift-click to mark empty
             </div>
             {/* Tooltip arrow */}
             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">

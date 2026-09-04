@@ -90,6 +90,12 @@ only gains a mention of shift-click, so the new control is documented where the 
 **e2e** — a desktop-project test that shift+clicking a cell renders an X, so the real browser's
 event path is covered rather than only the synthetic one.
 
+## Implementation notes (as built)
+
+The e2e coverage went into a new `e2e/desktop-input.spec.ts`. Every spec runs against every project,
+and Playwright's `click` is a tap on the touch-enabled ones — which goes through `handleTouchStart`
+and never sees a modifier — so the file skips itself on `hasTouch`.
+
 ## Open Questions
 
 - `Cell` has an Enter/Space `keyDown` handler, but cells are `tabIndex={-1}` and only the grid
