@@ -182,7 +182,11 @@ function App() {
                 <div>
                   {currentPuzzle.width} × {currentPuzzle.height}
                 </div>
-                <RatingBadge rating={currentPuzzle.rating} className="text-[10px] leading-tight" />
+                <RatingBadge
+                  rating={currentPuzzle.rating}
+                  reveal={isComplete}
+                  className="text-[10px] leading-tight"
+                />
               </div>
             )}
           </div>
@@ -201,7 +205,7 @@ function App() {
               <div className="text-sm sm:text-base text-gray-600">
                 <span className="font-semibold">{currentPuzzle.title}</span>
                 <span className="mx-2">•</span>
-                <RatingBadge rating={currentPuzzle.rating} />
+                <RatingBadge rating={currentPuzzle.rating} reveal={isComplete} />
                 <span className="mx-2">•</span>
                 <span>
                   {currentPuzzle.width} × {currentPuzzle.height}
