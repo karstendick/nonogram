@@ -153,7 +153,7 @@ export const useGameStore = create<GameStore>()(
 
       // Check if solution is correct
       checkSolution: () => {
-        const { playerGrid, currentPuzzle } = get();
+        const { playerGrid, currentPuzzle, isComplete, markLog } = get();
         if (!currentPuzzle) return false;
 
         const { solution } = currentPuzzle;
@@ -174,6 +174,36 @@ export const useGameStore = create<GameStore>()(
             }
           }
           if (!isCorrect) break;
+        }
+
+        // Winning only requires the picture to be right, so every cell the player
+        // never bothered to X is still Empty. Fill those in as the puzzle is won:
+        // the cells are known empty at that point, and leaving them blank puts
+        // holes in the finished board and in the replay built from it.
+        //
+        // Only on the transition into complete, so a puzzle restored from storage
+        // already finished is left as it was, and re-checking appends nothing.
+        if (isCorrect && !isComplete) {
+          const completedGrid = playerGrid.map((r) => [...r]);
+          // Reading order, so the replay ends on a sweep across and down the board
+          const autoMarks: number[] = [];
+
+          for (let row = 0; row < currentPuzzle.height; row++) {
+            for (let col = 0; col < currentPuzzle.width; col++) {
+              if (completedGrid[row][col] !== CellState.Empty) continue;
+              completedGrid[row][col] = CellState.MarkedEmpty;
+              autoMarks.push(encodeMark(row, col, currentPuzzle.width, CellState.MarkedEmpty));
+            }
+          }
+
+          // Not moves: the completion stat weighs player moves against the
+          // deductions the puzzle needed, and these are the machine's, not theirs.
+          set({
+            isComplete: true,
+            playerGrid: completedGrid,
+            markLog: autoMarks.length > 0 ? [...markLog, ...autoMarks] : markLog,
+          });
+          return true;
         }
 
         set({ isComplete: isCorrect });

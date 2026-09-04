@@ -178,3 +178,86 @@ describe('Grid - Replay Rendering', () => {
     expect(useGameStore.getState().moves).toBe(0);
   });
 });
+
+// Right-dragging is awkward or impossible on many trackpads, so shift + left is
+// the same gesture by another route.
+describe('Grid - Shift-click to mark empty', () => {
+  beforeEach(() => {
+    const store = useGameStore.getState();
+    store.loadPuzzle(createTestPuzzle());
+  });
+
+  it('should mark a cell empty on shift + left-click', async () => {
+    const user = userEvent.setup();
+    render(<Grid />);
+
+    const cell = screen.getAllByRole('gridcell')[0];
+
+    await user.keyboard('{Shift>}');
+    await user.click(cell);
+    await user.keyboard('{/Shift}');
+
+    expect(useGameStore.getState().playerGrid[0][0]).toBe(CellState.MarkedEmpty);
+  });
+
+  it('should clear a marked empty cell on shift + left-click', async () => {
+    const user = userEvent.setup();
+    render(<Grid />);
+
+    const cell = screen.getAllByRole('gridcell')[0];
+
+    await user.keyboard('{Shift>}');
+    await user.click(cell);
+    expect(useGameStore.getState().playerGrid[0][0]).toBe(CellState.MarkedEmpty);
+
+    await user.click(cell);
+    await user.keyboard('{/Shift}');
+
+    expect(useGameStore.getState().playerGrid[0][0]).toBe(CellState.Empty);
+  });
+
+  it('should not allow marking empty a filled cell with shift + left-click', async () => {
+    const user = userEvent.setup();
+    render(<Grid />);
+
+    const cell = screen.getAllByRole('gridcell')[0];
+
+    await user.click(cell);
+    expect(useGameStore.getState().playerGrid[0][0]).toBe(CellState.Filled);
+
+    await user.keyboard('{Shift>}');
+    await user.click(cell);
+    await user.keyboard('{/Shift}');
+
+    // Same refusal as a right-click on a filled cell
+    expect(useGameStore.getState().playerGrid[0][0]).toBe(CellState.Filled);
+  });
+
+  it('should mark a run empty on shift + left-drag', async () => {
+    const user = userEvent.setup();
+    render(<Grid />);
+
+    const cells = screen.getAllByRole('gridcell');
+
+    await user.keyboard('{Shift>}');
+    await user.pointer([
+      { keys: '[MouseLeft>]', target: cells[6] }, // row 2, col 0
+      { target: cells[7] }, // row 2, col 1
+      { keys: '[/MouseLeft]' },
+    ]);
+    await user.keyboard('{/Shift}');
+
+    const { playerGrid } = useGameStore.getState();
+    expect(playerGrid[2][0]).toBe(CellState.MarkedEmpty);
+    expect(playerGrid[2][1]).toBe(CellState.MarkedEmpty);
+  });
+
+  it('should still fill on a plain left-click', async () => {
+    const user = userEvent.setup();
+    render(<Grid />);
+
+    await user.click(screen.getAllByRole('gridcell')[0]);
+
+    expect(useGameStore.getState().playerGrid[0][0]).toBe(CellState.Filled);
+  });
+});

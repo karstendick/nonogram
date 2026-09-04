@@ -37,14 +37,14 @@ export function Grid({ displayGrid, interactive = true }: GridProps) {
   }
 
   // Determine what action to perform based on current state and mode
-  const getToggleAction = (row: number, col: number, isRightClick: boolean): CellState => {
+  const getToggleAction = (row: number, col: number, markEmpty: boolean): CellState => {
     const currentState = playerGrid[row][col];
 
-    if (isRightClick) {
-      // Right click: toggle between empty and marked empty
+    if (markEmpty) {
+      // Right-click or shift + left-click: toggle between empty and marked empty
       return currentState === CellState.MarkedEmpty ? CellState.Empty : CellState.MarkedEmpty;
     } else {
-      // Left click or tap: depends on mode (mobile) or just fill (desktop)
+      // Plain left click or tap: depends on mode (mobile) or just fill (desktop)
       if (currentMode === InteractionMode.MarkEmpty) {
         // Mark empty mode: toggle between empty and marked empty
         return currentState === CellState.MarkedEmpty ? CellState.Empty : CellState.MarkedEmpty;
@@ -55,9 +55,9 @@ export function Grid({ displayGrid, interactive = true }: GridProps) {
     }
   };
 
-  const handleCellClick = (row: number, col: number, isRightClick: boolean) => {
+  const handleCellClick = (row: number, col: number, markEmpty: boolean) => {
     const currentState = playerGrid[row][col];
-    const newState = getToggleAction(row, col, isRightClick);
+    const newState = getToggleAction(row, col, markEmpty);
 
     // Check constraints before applying
     if (newState === CellState.Filled && currentState === CellState.MarkedEmpty) {
@@ -70,8 +70,11 @@ export function Grid({ displayGrid, interactive = true }: GridProps) {
     setCellState(row, col, newState);
   };
 
-  const handleCellDragStart = (row: number, col: number, isRightClick: boolean) => {
-    const action = getToggleAction(row, col, isRightClick);
+  // The gesture is read once, here, and `startDrag` fixes the action for the
+  // whole stroke — so letting go of shift midway does not change what a drag is
+  // placing, exactly as with a right-drag.
+  const handleCellDragStart = (row: number, col: number, markEmpty: boolean) => {
+    const action = getToggleAction(row, col, markEmpty);
     startDrag(row, col, action);
   };
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from '../src/store/gameStore';
-import { decodeMark } from '../src/logic/replay';
+import { buildReplaySequence, decodeMark } from '../src/logic/replay';
 import { CellState } from '../src/types';
 import type { Puzzle } from '../src/types';
 
@@ -508,6 +508,100 @@ describe('GameStore', () => {
 
       expect(useGameStore.getState().markLog).toEqual([]);
       expect(useGameStore.getState().moves).toBe(3);
+    });
+  });
+
+  // Winning only needs the picture to be right, so the cells the player never
+  // X'd are still empty when the puzzle is solved. They get filled in on the way
+  // out, so the finished board and the replay built from it have no holes.
+  describe('completion fills the remaining cells with X-marks', () => {
+    const decodeLog = () => useGameStore.getState().markLog.map((entry) => decodeMark(entry, 3));
+
+    // The three cells the solution fills. Filling exactly these wins the puzzle
+    // and leaves the other six untouched.
+    const solve = () => {
+      const store = useGameStore.getState();
+      store.setCellState(0, 0, CellState.Filled);
+      useGameStore.getState().setCellState(0, 1, CellState.Filled);
+      useGameStore.getState().setCellState(1, 0, CellState.Filled);
+    };
+
+    it('leaves no empty cell on the finished board', () => {
+      solve();
+
+      const { playerGrid, isComplete } = useGameStore.getState();
+      expect(isComplete).toBe(true);
+      expect(playerGrid.flat()).not.toContain(CellState.Empty);
+    });
+
+    it('appends the X-marks after the mark that completed the puzzle, in reading order', () => {
+      solve();
+
+      expect(decodeLog()).toEqual([
+        { row: 0, col: 0, state: CellState.Filled },
+        { row: 0, col: 1, state: CellState.Filled },
+        { row: 1, col: 0, state: CellState.Filled },
+        { row: 0, col: 2, state: CellState.MarkedEmpty },
+        { row: 1, col: 1, state: CellState.MarkedEmpty },
+        { row: 1, col: 2, state: CellState.MarkedEmpty },
+        { row: 2, col: 0, state: CellState.MarkedEmpty },
+        { row: 2, col: 1, state: CellState.MarkedEmpty },
+        { row: 2, col: 2, state: CellState.MarkedEmpty },
+      ]);
+    });
+
+    it('does not count them as moves', () => {
+      solve();
+
+      // Three fills, and nothing charged for the six cells filled in on completion
+      expect(useGameStore.getState().moves).toBe(3);
+    });
+
+    it('adds nothing when the player already X-marked every empty cell', () => {
+      const store = useGameStore.getState();
+      store.markMultipleCells([
+        { row: 0, col: 2, state: CellState.MarkedEmpty },
+        { row: 1, col: 1, state: CellState.MarkedEmpty },
+        { row: 1, col: 2, state: CellState.MarkedEmpty },
+        { row: 2, col: 0, state: CellState.MarkedEmpty },
+        { row: 2, col: 1, state: CellState.MarkedEmpty },
+        { row: 2, col: 2, state: CellState.MarkedEmpty },
+      ]);
+      solve();
+
+      expect(useGameStore.getState().markLog).toHaveLength(9);
+    });
+
+    it('appends nothing when checkSolution runs again on a finished puzzle', () => {
+      solve();
+      const logAfterSolving = useGameStore.getState().markLog;
+
+      useGameStore.getState().checkSolution();
+
+      expect(useGameStore.getState().markLog).toEqual(logAfterSolving);
+    });
+
+    // The point of the whole change: a solve done with fills alone used to
+    // replay onto a board full of holes.
+    it('replays every cell of the finished board, with the X-marks last', () => {
+      solve();
+
+      const { markLog, playerGrid } = useGameStore.getState();
+      const sequence = buildReplaySequence(markLog, playerGrid, 3);
+
+      expect(sequence).toHaveLength(9);
+      expect(sequence.slice(0, 3).map((mark) => mark.state)).toEqual([
+        CellState.Filled,
+        CellState.Filled,
+        CellState.Filled,
+      ]);
+      expect(sequence.slice(3).every((mark) => mark.state === CellState.MarkedEmpty)).toBe(true);
+    });
+
+    it('leaves the board alone while the puzzle is unsolved', () => {
+      useGameStore.getState().setCellState(0, 0, CellState.Filled);
+
+      expect(useGameStore.getState().playerGrid.flat()).toContain(CellState.Empty);
     });
   });
 });
