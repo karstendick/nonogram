@@ -114,6 +114,16 @@ sequence contain.
 
 - Solve a puzzle by fills only, and assert the replay's final frame has no blank cells.
 
+## Implementation notes (as built)
+
+The replay-level assertions ended up in `tests/gameStore.test.ts` rather than `tests/replay.test.ts`.
+`buildReplaySequence` knows nothing about completion — it is handed a log and a grid — so a test of
+"the finished board replays without holes" has to start from a puzzle the store actually completed.
+`tests/replay.test.ts` keeps testing the pure function against hand-built logs.
+
+The e2e regression test was checked both ways: it fails on the board-with-holes and passes on the
+fix.
+
 ## Open Questions
 
 - Should the auto-placed X's be visually distinguished from the player's own marks during the

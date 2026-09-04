@@ -39,6 +39,22 @@ const solveHouse = async (page: Page) => {
 };
 
 test.describe('Solve replay', () => {
+  test('leaves no blank cells on the board it replays onto', async ({ page }) => {
+    await openHousePuzzle(page);
+
+    // Fills only, no X-marks — the case that used to replay onto a board full
+    // of holes, since winning never required marking the empty cells
+    for (const [row, col] of HOUSE_FILLED) {
+      await page.locator(`[data-row="${row}"][data-col="${col}"]`).click();
+    }
+
+    await expect(page.getByText('Puzzle Complete!')).toBeVisible({ timeout: 15000 });
+
+    await expect(page.locator('[role="gridcell"]')).toHaveCount(25);
+    // A cell with no child element is drawing neither a fill nor an X
+    await expect(page.locator('[role="gridcell"]:not(:has(*))')).toHaveCount(0);
+  });
+
   test('replays the solve before showing the completion modal', async ({ page }) => {
     await openHousePuzzle(page);
     await solveHouse(page);
