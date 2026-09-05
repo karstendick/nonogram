@@ -28,7 +28,8 @@
     "test:e2e:report": "playwright show-report",
     "validate": "npm run lint && npm run format:check && npm run type-check && npm run test:ci",
     "prepare": "husky",
-    "postinstall": "playwright install chromium --with-deps"
+    "postinstall": "playwright install chromium --with-deps",
+    "size-presets": "vitest run --config vitest.bakeoff.config.ts scripts/size-presets.test.ts"
   },
   "dependencies": {
     "lodash": "^4.17.21",
