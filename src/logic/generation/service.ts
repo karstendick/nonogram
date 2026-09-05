@@ -156,6 +156,8 @@ class GenerationService {
   private ready: GeneratedPuzzle | null = null;
   private readyKey: string | null = null;
   private job: Job | null = null;
+  /** True while a player is waiting on `take`. */
+  private serving = false;
 
   /**
    * Kick off a generation nobody is waiting for yet — for the level the player
@@ -163,6 +165,12 @@ class GenerationService {
    * how people behave. A wrong guess costs some background work and nothing else.
    */
   speculate(size: number, levelId: number): void {
+    // A player waiting on a puzzle owns the generator. Speculation starts on a
+    // timer and can easily land mid-wait — the landing page schedules it on
+    // mount, and Safari, which has no requestIdleCallback, falls back to a
+    // half-second timeout that fires right about when the player presses play.
+    // Cancelling their job to guess at another target hands them a failure.
+    if (this.serving) return;
     if (this.hasReady(size, levelId)) return;
     if (this.job && matches(this.job, size, levelId)) return;
     this.startBackgroundJob(size, levelId);
@@ -194,6 +202,19 @@ class GenerationService {
     levelId: number,
     onProgress?: (progress: GenerationProgress) => void
   ): Promise<GeneratedPuzzle | null> {
+    this.serving = true;
+    try {
+      return await this.serve(size, levelId, onProgress);
+    } finally {
+      this.serving = false;
+    }
+  }
+
+  private async serve(
+    size: number,
+    levelId: number,
+    onProgress?: (progress: GenerationProgress) => void
+  ): Promise<GeneratedPuzzle | null> {
     if (this.hasReady(size, levelId)) {
       const result = this.ready!;
       this.ready = null;
@@ -207,6 +228,13 @@ class GenerationService {
     if (this.job && matches(this.job, size, levelId)) {
       const result = await this.job.promise;
       this.job = null;
+      // The background handler parks a finished job's puzzle as the spare one.
+      // This is that puzzle, and it is being handed out now, so it is not spare
+      // any more — leaving it would deal the same puzzle out twice.
+      if (result && this.ready === result) {
+        this.ready = null;
+        this.readyKey = null;
+      }
       if (result) {
         this.refill(size, levelId);
         return result;
@@ -240,6 +268,7 @@ class GenerationService {
     this.job = null;
     this.ready = null;
     this.readyKey = null;
+    this.serving = false;
   }
 }
 

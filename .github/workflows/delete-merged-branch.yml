@@ -16,7 +16,7 @@ jobs:
     steps:
       # Checkout first so local actions are available (GitHub resolves local action paths before evaluating step conditions)
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
 
