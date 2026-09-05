@@ -51,7 +51,7 @@ describe('CompletionModal', () => {
   });
 
   it('does not offer to play another puzzle for pre-made puzzles', () => {
-    completeWith(makePuzzle('Heart', 7));
+    completeWith(makePuzzle('Star', 10));
 
     render(
       <CompletionModal
@@ -68,7 +68,7 @@ describe('CompletionModal', () => {
 
   it('generates a new puzzle of the same size and hands it back', async () => {
     completeWith(makePuzzle('Generated 10×10', 10));
-    useGameStore.setState({ lastLevelId: 3 });
+    useGameStore.setState({ lastLevelId: 3, lastSize: 10 });
     const onPlayAnother = vi.fn();
 
     render(
@@ -84,9 +84,9 @@ describe('CompletionModal', () => {
 
     await waitFor(() => expect(onPlayAnother).toHaveBeenCalledTimes(1));
 
-    // Asks for the level last played, and hands back whatever the service had
-    // ready — which is usually a puzzle generated while this one was being solved.
-    expect(take).toHaveBeenCalledWith(3);
+    // Asks for the size and level last played, and hands back whatever the
+    // service had ready — usually a puzzle generated while this one was solved.
+    expect(take).toHaveBeenCalledWith(10, 3);
     const newPuzzle = onPlayAnother.mock.calls[0][0] as Puzzle;
     expect(newPuzzle.id).not.toBe('test-seed');
   });

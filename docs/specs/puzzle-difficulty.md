@@ -11,10 +11,18 @@
 
 **Scope: generated 15×15 puzzles.** That is what actually gets played — 15×15 is the largest grid
 that fits comfortably on an iPhone screen — so it is the only size this feature is designed and
-calibrated for. Smaller sizes still work and still get rated; they are simply not what the tiers are
-tuned against, and nothing here should be traded off to serve them. The 5×5 and 10×10 numbers in
-[Research](#research) are kept because they show how the signals behave as size varies, not because
-they are design targets.
+calibrated for.
+
+> _Superseded, 2026-09-04:_ all three sizes are calibrated now. The knob presets were measured
+> per size (`npm run size-presets`), and every difficulty level turns out to be reachable at 5×5 and
+> 10×10 as well — 12 of 12 trials in each of the twelve cells, worst case 580ms. Quick Play offers
+> the sizes again. See [seed-sharing-fixes.md](seed-sharing-fixes.md). Two findings there qualify
+> what follows: a low hit rate is not unavailability, because draw cost varies a thousandfold across
+> the size range; and the technique ladder is not monotonic at 5×5, where contradiction puzzles are
+> far easier to reach than forced-placement ones. Smaller sizes still work and still get rated; they are simply not what the tiers are
+> tuned against, and nothing here should be traded off to serve them. The 5×5 and 10×10 numbers in
+> [Research](#research) are kept because they show how the signals behave as size varies, not because
+> they are design targets.
 
 The goal has two halves, and they are separable:
 

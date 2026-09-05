@@ -21,7 +21,7 @@ export function CompletionModal({
   onWatchReplay,
   canWatchReplay,
 }: CompletionModalProps) {
-  const { isComplete, moves, currentPuzzle, lastLevelId } = useGameStore();
+  const { isComplete, moves, currentPuzzle, lastLevelId, lastSize } = useGameStore();
   const [isAdmiring, setIsAdmiring] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -41,7 +41,7 @@ export function CompletionModal({
    */
   const handlePlayAnother = () => {
     setIsGenerating(true);
-    void generationService.take(lastLevelId).then((result) => {
+    void generationService.take(lastSize, lastLevelId).then((result) => {
       setIsGenerating(false);
       if (result) onPlayAnother(result.puzzle);
     });
@@ -72,7 +72,9 @@ export function CompletionModal({
                   : 'bg-purple-600 text-white hover:bg-purple-700'
               }`}
             >
-              {isGenerating ? 'Generating…' : `Play Another (${levelById(lastLevelId).name})`}
+              {isGenerating
+                ? 'Generating…'
+                : `Play Another (${levelById(lastLevelId).name} ${lastSize}×${lastSize})`}
             </button>
           )}
           {canWatchReplay && (

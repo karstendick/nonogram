@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { CODES, openPuzzleByCode } from './fixtures';
 
 test.describe('Nonogram App - Basic Functionality', () => {
   test('should load the landing page', async ({ page }) => {
@@ -9,7 +10,7 @@ test.describe('Nonogram App - Basic Functionality', () => {
 
     // Check that all three main options are present
     await expect(page.getByText('Quick Play')).toBeVisible();
-    await expect(page.getByText('Enter a Seed')).toBeVisible();
+    await expect(page.getByText('Enter a code')).toBeVisible();
     await expect(page.getByText('Pre-made Puzzles')).toBeVisible();
   });
 
@@ -44,17 +45,25 @@ test.describe('Nonogram App - Basic Functionality', () => {
     await expect(cells.first()).toBeVisible();
   });
 
-  test('should navigate to seed entry page', async ({ page }) => {
+  test('reveals the code field in place, without leaving the landing page', async ({ page }) => {
     await page.goto('/');
 
-    // Click on Enter a Seed option
-    const seedButton = page.getByText('Enter a Seed').locator('..');
-    await seedButton.click();
+    // Hidden until asked for: most players arrive without a code.
+    await expect(page.getByLabel('Puzzle code')).toBeHidden();
 
-    // Check that we're on the seed entry page
-    await expect(page.getByRole('heading', { name: /Nonogram Puzzle/i })).toBeVisible();
-    await expect(page.getByText('Generate a puzzle from a seed')).toBeVisible();
-    await expect(page.getByLabel('Seed')).toBeVisible();
+    await page.getByRole('button', { name: /Enter a code/ }).click();
+
+    await expect(page.getByLabel('Puzzle code')).toBeVisible();
+    // Still on the landing page — this is a disclosure, not a navigation.
+    await expect(page.getByText('Quick Play')).toBeVisible();
+  });
+
+  test('opens a puzzle from its code', async ({ page }) => {
+    await page.goto('/');
+    await openPuzzleByCode(page, CODES.easy5);
+
+    // A 5x5 board, from six characters and no generation.
+    await expect(page.getByRole('gridcell')).toHaveCount(25);
   });
 
   test('should show game board when playing', async ({ page }) => {

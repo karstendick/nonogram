@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { DEFAULT_LEVEL_ID } from '../logic/generation/levels';
+import { DEFAULT_LEVEL_ID, DEFAULT_SIZE } from '../logic/generation/levels';
 import { CellState, InteractionMode, type Puzzle } from '../types';
 import { encodeMark } from '../logic/replay';
 
@@ -31,6 +31,8 @@ interface GameStore {
    * background work.
    */
   lastLevelId: number;
+  /** The grid size last played, persisted for the same reason as the level. */
+  lastSize: number;
 
   // Drag state
   isDragging: boolean;
@@ -48,6 +50,7 @@ interface GameStore {
   checkSolution: () => boolean;
 
   setLastLevelId: (levelId: number) => void;
+  setLastSize: (size: number) => void;
 
   // Drag actions
   startDrag: (row: number, col: number, action: CellState) => void;
@@ -66,6 +69,7 @@ export const useGameStore = create<GameStore>()(
       isComplete: false,
       markLog: [],
       lastLevelId: DEFAULT_LEVEL_ID,
+      lastSize: DEFAULT_SIZE,
 
       // Drag state
       isDragging: false,
@@ -145,6 +149,10 @@ export const useGameStore = create<GameStore>()(
       // Set interaction mode (for mobile)
       setLastLevelId: (levelId: number) => {
         set({ lastLevelId: levelId });
+      },
+
+      setLastSize: (size: number) => {
+        set({ lastSize: size });
       },
 
       setMode: (mode: InteractionMode) => {

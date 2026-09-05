@@ -390,3 +390,29 @@ New `e2e/sharing.spec.ts`: play a Quick Play puzzle, copy its code, reload, past
 grid.
 
 Full suite: `npm test` and the e2e run before this is called done.
+
+## Implementation notes (as built)
+
+Built as specified. Four things worth recording.
+
+**A StrictMode bug the e2e suite caught and jsdom did not.** The first cut read the hash and cleared
+it in the same `useState` initializer. StrictMode invokes an initializer twice and keeps the _second_
+result, so the first call consumed the hash and its result was discarded — leaving the second call
+looking at an empty hash. A valid link still worked, but only by accident: its discarded first pass
+had already loaded the puzzle into the store as a side effect during render. An invalid link had no
+such side effect, so it silently showed the landing page with no message. Both reads are pure now,
+and clearing the hash is a `useEffect`. The unit tests passed throughout — only the browser run
+exposed it.
+
+**The e2e suite got faster.** 1.8 minutes to 54 seconds, because six spec files no longer type a seed
+and wait for generation; they paste a fixed code from `e2e/fixtures.ts` and open in milliseconds.
+That also makes their puzzles deterministic rather than whatever generation produced.
+
+**Sizes came out of `levels.ts`.** `SIZES` and `DEFAULT_SIZE` live beside the levels, since the code
+format's length-implies-size rule and the size selector both need the same list.
+
+**The twelve-cell reachability test costs 450ms**, so it runs in the normal suite rather than being
+marked slow.
+
+Unrelated and left alone: `e2e/x-centering.spec.ts` writes `x-centering-test.png` to the repo root
+rather than the gitignored `screenshots/`, so running the e2e suite dirties `git status`.

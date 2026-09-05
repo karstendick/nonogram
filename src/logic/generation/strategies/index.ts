@@ -29,12 +29,18 @@ import {
 export const OPPORTUNISTIC_PARAMS: PatternParams = { fillRatio: 0.5, smoothingRounds: 2 };
 
 /**
- * The pattern shape that produces the target rung most often, measured rather
- * than guessed: 57% for completion, 90% for segment partitioning, 88% for
- * forced placement, 40% for contradiction.
+ * The pattern shape that produces the target rung most often at this size,
+ * measured rather than guessed. At 15x15 the hit rates are 57% for completion,
+ * 90% for segment partitioning, 88% for forced placement and 40% for
+ * contradiction; the 5x5 and 10x10 columns are in
+ * docs/specs/seed-sharing-fixes.md.
+ *
+ * Sizes outside the table fall back to the 15x15 shape. Only the calibration
+ * scripts ask for those — the app offers exactly the measured sizes.
  */
 function presetFor(target: DifficultyTarget): PatternParams {
-  return (LEVELS.find((level) => level.rung === target.rung) ?? LEVELS[0]).params;
+  const level = LEVELS.find((l) => l.rung === target.rung) ?? LEVELS[0];
+  return level.params[target.size] ?? level.params[15]!;
 }
 
 /** Tracks the closest candidate seen, so a budget overrun still returns something. */

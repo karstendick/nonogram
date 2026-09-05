@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { CODES, openPuzzleByCode } from './fixtures';
 
 test.describe('Cell Sizing Tests', () => {
   test('cells should be uniform, square, and touch-friendly on mobile', async ({
@@ -68,14 +69,7 @@ test.describe('Cell Sizing Tests', () => {
   test('cells should remain square on larger puzzles', async ({ page }) => {
     await page.goto('/');
 
-    // Navigate to Enter a Seed page
-    const seedButton = page.getByText('Enter a Seed').locator('..');
-    await seedButton.click();
-
-    // Generate a larger puzzle (15x15)
-    await page.getByLabel('Seed').fill('test-15x15-puzzle');
-    await page.getByLabel('15×15').check();
-    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
+    await openPuzzleByCode(page, CODES.medium15);
 
     // Wait for game board to load - wait for actual cells to appear
     const cells = page.getByRole('gridcell');

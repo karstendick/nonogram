@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generatePuzzle } from './puzzleGenerator';
+import { generatePuzzle } from '../src/logic/puzzleGenerator';
 
 describe('puzzleGenerator', () => {
   it('should generate a valid 5x5 puzzle with a given seed', () => {
@@ -56,5 +56,23 @@ describe('puzzleGenerator', () => {
     const puzzle2 = generatePuzzle(10, 'seed-2');
 
     expect(puzzle1).not.toEqual(puzzle2);
+  });
+
+  it('gives a different puzzle for the same seed at another level', () => {
+    // The fact that broke seed sharing: a seed names a starting point for a
+    // search, not a puzzle, so it needs the level and size to mean anything.
+    // A code carries the grid instead, which is why it round-trips.
+    const evil = generatePuzzle(15, 'shared-seed', 4);
+    const medium = generatePuzzle(15, 'shared-seed', 2);
+
+    expect(evil!.solution).not.toEqual(medium!.solution);
+  });
+
+  it('gives a different puzzle for the same seed and level at another size', () => {
+    const small = generatePuzzle(5, 'shared-seed', 2);
+    const large = generatePuzzle(10, 'shared-seed', 2);
+
+    expect(small!.width).toBe(5);
+    expect(large!.width).toBe(10);
   });
 });

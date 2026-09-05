@@ -21,8 +21,8 @@ a cell, following the consequences, and finding they cannot hold. Each puzzle al
 reports how many deductions it takes, so a short hard puzzle and a long one are
 distinguishable.
 
-**A curated set of hand-drawn puzzles** for people new to nonograms, from 5×5 up to
-15×15, each rated on the same scale as the generated ones.
+**A curated set of hand-drawn puzzles** for people new to nonograms, at 5×5, 10×10
+and 15×15, each rated on the same scale as the generated ones.
 
 **Built for playing on a phone.** Drag along a row to fill or mark several cells at
 once, switch between filling and marking with a toggle, and tap a finished clue to
@@ -40,8 +40,9 @@ deductions the puzzle required, in the spirit of Minesweeper's efficiency stat.
 Beating the solver is possible: one drag can cover ground it needed several separate
 deductions to justify.
 
-**Shareable puzzles.** Every generated puzzle has a seed you can copy and hand to
-someone else.
+**Shareable puzzles.** Every puzzle — generated or hand-drawn — has a code that
+encodes the puzzle itself, not instructions for rebuilding it. Copy the link,
+send it, and the person who opens it gets exactly your puzzle, immediately.
 
 **Works offline.** Progress saves as you play and survives a reload, and the app can
 be installed to a home screen.
