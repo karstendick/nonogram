@@ -15,7 +15,7 @@ test.describe('Mobile Visual Tests', () => {
 
     // Verify key elements are visible
     await expect(page.getByText('Quick Play')).toBeVisible();
-    await expect(page.getByText('Enter a Seed')).toBeVisible();
+    await expect(page.getByText('Enter a code')).toBeVisible();
     await expect(page.getByText('Pre-made Puzzles')).toBeVisible();
   });
 
@@ -103,20 +103,16 @@ test.describe('Mobile Visual Tests', () => {
     await expect(cells.first()).toBeVisible();
   });
 
-  test('should verify responsive layout of puzzle generation tab', async ({ page }) => {
+  test('should verify responsive layout of the code field', async ({ page }) => {
     await page.goto('/');
 
-    // Navigate to Enter a Seed page
-    const seedButton = page.getByText('Enter a Seed').locator('..');
-    await seedButton.click();
+    await page.getByRole('button', { name: /Enter a code/ }).click();
+    await expect(page.getByLabel('Puzzle code')).toBeVisible();
 
-    // Wait for form to be visible
-    await expect(page.locator('text=Size')).toBeVisible();
-    await expect(page.getByLabel('Seed')).toBeVisible();
-
-    // Take screenshot
+    // The input and its Enter button share a row; this is the shot that would
+    // show them wrapping or overflowing on a narrow screen.
     await page.screenshot({
-      path: `screenshots/generate-puzzle-${test.info().project.name}.png`,
+      path: `screenshots/enter-code-${test.info().project.name}.png`,
       fullPage: true,
     });
   });

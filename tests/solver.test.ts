@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { solveArray } from './solver';
-import { SolverCell } from '../types';
+import { solveArray } from '../src/logic/solver';
+import { SolverCell } from '../src/types';
 
 describe('solveArray', () => {
   it('should solve a simple single block that fills the entire array', () => {

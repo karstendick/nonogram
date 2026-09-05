@@ -8,8 +8,8 @@ test.describe('X Mark Centering', () => {
     const premadeButton = page.getByText('Pre-made Puzzles').locator('..');
     await premadeButton.click();
 
-    // Select a small puzzle for easier inspection
-    await page.getByText('Heart').first().click();
+    // Select a small puzzle for easier inspection (5×5)
+    await page.getByText('House').first().click();
 
     // Mark a few cells as empty to see X marks
     await page.getByRole('gridcell').nth(2).click({ button: 'right' });
@@ -17,7 +17,7 @@ test.describe('X Mark Centering', () => {
     await page.getByRole('gridcell').nth(12).click({ button: 'right' });
 
     // Take a screenshot for visual inspection
-    await page.screenshot({ path: 'x-centering-test.png' });
+    await page.screenshot({ path: `screenshots/x-centering-${test.info().project.name}.png` });
 
     // Get a cell with an X mark
     const markedCell = page.getByRole('gridcell').nth(2);

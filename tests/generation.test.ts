@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { generateRandomPattern } from '../src/logic/patternGenerator';
 import { Candidate, evaluatePattern } from '../src/logic/generation/evaluate';
-import { STRATEGIES, g2KnobBiased, g9Opportunistic } from '../src/logic/generation/strategies';
+import {
+  STRATEGIES,
+  g2KnobBiased,
+  g9Opportunistic,
+  generateForTarget,
+} from '../src/logic/generation/strategies';
+import { LEVELS, SIZES } from '../src/logic/generation/levels';
 import {
   DEFAULT_OPTIONS,
   DifficultyTarget,
@@ -212,4 +218,45 @@ describe('bakeoff reporting', () => {
       '15x15 needing forced placement'
     );
   });
+});
+
+describe('per-size calibration', () => {
+  it('has a measured preset for every level at every size the app offers', () => {
+    // The completeness Quick Play relies on: it offers every combination, so
+    // every combination needs a shape measured at that size rather than
+    // borrowed from 15x15.
+    for (const level of LEVELS) {
+      for (const size of SIZES) {
+        expect(level.params[size], `${level.name} at ${size}x${size}`).toBeDefined();
+      }
+    }
+  });
+
+  it('falls back to the 15x15 shape for sizes only the scripts ask for', () => {
+    // generateForTarget is reachable from the calibration scripts at any size.
+    const result = generateForTarget({ size: 12, rung: Technique.Completion }, 'unmeasured-size', {
+      budgetMs: 2000,
+    });
+    expect(result.puzzle).not.toBeNull();
+    expect(result.puzzle!.width).toBe(12);
+  });
+
+  it('reaches every level at every size', () => {
+    // The measurement that removed difficulty gating: 12 of 12 trials found a
+    // puzzle in each of the twelve cells. Two seeds per cell here, since the
+    // point is that the combination is reachable at all.
+    for (const level of LEVELS) {
+      for (const size of SIZES) {
+        for (const seed of ['a', 'b']) {
+          const result = generateForTarget(
+            { size, rung: level.rung },
+            `reach-${size}-${level.id}-${seed}`,
+            { budgetMs: 5000 }
+          );
+          expect(result.puzzle, `${level.name} at ${size}x${size}`).not.toBeNull();
+          expect(result.inBand, `${level.name} at ${size}x${size} landed in band`).toBe(true);
+        }
+      }
+    }
+  }, 60000);
 });

@@ -80,7 +80,7 @@ test.describe('Mobile Interaction Tests', () => {
     // Verify we're back at the landing page
     await expect(page.getByRole('heading', { name: /Nonogram Puzzle/i })).toBeVisible();
     await expect(page.getByText('Quick Play')).toBeVisible();
-    await expect(page.getByText('Enter a Seed')).toBeVisible();
+    await expect(page.getByText('Enter a code')).toBeVisible();
     await expect(page.getByText('Pre-made Puzzles')).toBeVisible();
   });
 
@@ -89,13 +89,12 @@ test.describe('Mobile Interaction Tests', () => {
     const backButton = page.getByRole('button', { name: /Back to Home/i });
     await backButton.click();
 
-    // Click on Enter a Seed
-    const seedButton = page.getByText('Enter a Seed').locator('..');
-    await seedButton.click();
+    // Pre-made puzzles, now that entering a code no longer leaves the page.
+    const premadeButton = page.getByText('Pre-made Puzzles').locator('..');
+    await premadeButton.click();
 
-    // Verify we're on seed entry page
-    await expect(page.locator('text=Size')).toBeVisible();
-    await expect(page.getByLabel('Seed')).toBeVisible();
+    // Verify we're on the pre-made page
+    await expect(page.getByRole('heading', { name: 'Pre-made Puzzles' })).toBeVisible();
 
     // Go back to home
     const backToHomeButton = page.getByRole('button', { name: /Back to Home/i });

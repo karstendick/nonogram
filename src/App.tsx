@@ -1,30 +1,37 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { GameBoard } from './components/GameBoard';
 import { ModeToggle } from './components/ModeToggle';
 import { CompletionModal } from './components/CompletionModal';
 import { LandingPage } from './components/LandingPage';
 import { PuzzleSelector } from './components/PuzzleSelector';
-import { PuzzleGenerator } from './components/PuzzleGenerator';
 import { SolveReplay } from './components/SolveReplay';
 import { useGameStore } from './store/gameStore';
-import { isGeneratedPuzzle } from './logic/randomPuzzle';
+import { encodePuzzleCode, shareUrl } from './logic/puzzleCode';
+import { puzzleFromCode } from './logic/puzzleGenerator';
 import { buildReplaySequence } from './logic/replay';
 import { RatingBadge } from './components/RatingBadge';
 import type { Puzzle } from './types';
 
-// Component to display and copy puzzle seed
-function SeedDisplay({ seed, className = '' }: { seed: string; className?: string }) {
+/**
+ * The puzzle's code, and a link to it.
+ *
+ * Shows the code but copies the link: a full URL is too long to sit in a header,
+ * while the code is what identifies the puzzle to anyone reading a screenshot.
+ * The label says "Copy link" so the difference is stated rather than discovered.
+ */
+function PuzzleCodeDisplay({ puzzle, className = '' }: { puzzle: Puzzle; className?: string }) {
   const [copied, setCopied] = useState(false);
+  const code = useMemo(() => encodePuzzleCode(puzzle.solution), [puzzle.solution]);
 
   const handleClick = () => {
     navigator.clipboard
-      .writeText(seed)
+      .writeText(shareUrl(code))
       .then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       })
       .catch((err) => {
-        console.error('Failed to copy seed:', err);
+        console.error('Failed to copy link:', err);
       });
   };
 
@@ -32,12 +39,13 @@ function SeedDisplay({ seed, className = '' }: { seed: string; className?: strin
     <button
       onClick={handleClick}
       className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-mono bg-gray-100 hover:bg-gray-200 rounded transition-colors select-none ${className}`}
-      title="Click to copy seed"
+      title="Copy a link to this puzzle"
+      aria-label={`Copy link to puzzle ${code}`}
     >
-      <span className="text-gray-600">Seed:</span>
-      <span className="font-semibold text-gray-800">{seed}</span>
+      <span className="text-gray-600">Code:</span>
+      <span className="font-semibold text-gray-800">{code}</span>
       {copied ? (
-        <span className="text-green-600 font-semibold">✓</span>
+        <span className="text-green-600 font-semibold">✓ Copied link</span>
       ) : (
         <span className="text-gray-400">📋</span>
       )}
@@ -45,16 +53,44 @@ function SeedDisplay({ seed, className = '' }: { seed: string; className?: strin
   );
 }
 
+/** The code a shared link carries, if this page was opened from one. */
+function codeFromHash(): string {
+  return window.location.hash.replace(/^#/, '');
+}
+
 function App() {
   const { currentPuzzle, playerGrid, markLog, isComplete, loadPuzzle } = useGameStore();
+
+  // A shared link is an explicit request, so it beats resuming saved progress.
+  //
+  // Both reads are pure: StrictMode invokes an initializer twice and keeps the
+  // second result, so anything that consumed the hash here would throw away
+  // what the first call learned. Clearing it is an effect, below.
+  const [sharedCode] = useState(codeFromHash);
+  const [sharedPuzzle] = useState(() => (sharedCode ? puzzleFromCode(sharedCode) : null));
+
+  // Guarded by id, so running twice under StrictMode loads once.
+  if (sharedPuzzle && useGameStore.getState().currentPuzzle?.id !== sharedPuzzle.id) {
+    loadPuzzle(sharedPuzzle);
+  }
+
+  /**
+   * Consume the link once it has been acted on. Left in place, a reload would
+   * re-open the shared puzzle from scratch and discard the solve in progress on
+   * it — the player's own work, destroyed by a refresh.
+   */
+  useEffect(() => {
+    if (!sharedCode) return;
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+  }, [sharedCode]);
+
   // If a puzzle was persisted from a previous session and isn't finished, resume it.
   const hasSavedProgress = currentPuzzle !== null && !useGameStore.getState().isComplete;
-  const [view, setView] = useState<'landing' | 'enterSeed' | 'premade' | 'game'>(
-    hasSavedProgress ? 'game' : 'landing'
+  const [view, setView] = useState<'landing' | 'premade' | 'game'>(
+    sharedPuzzle || hasSavedProgress ? 'game' : 'landing'
   );
-
-  // Check if the current puzzle is generated (vs pre-made)
-  const isGenerated = isGeneratedPuzzle(currentPuzzle);
+  // A link whose code does not name a puzzle should say so rather than show a blank.
+  const badLink = Boolean(sharedCode) && !sharedPuzzle;
 
   // Replay of the player's solve, shown before the completion modal
   const [replayPhase, setReplayPhase] = useState<'idle' | 'playing' | 'done'>('idle');
@@ -108,32 +144,17 @@ function App() {
   // Landing page
   if (view === 'landing') {
     return (
-      <LandingPage
-        onPuzzleSelected={handlePuzzleSelected}
-        onNavigateToSeedEntry={() => setView('enterSeed')}
-        onNavigateToPremade={() => setView('premade')}
-      />
-    );
-  }
-
-  // Enter Seed page
-  if (view === 'enterSeed') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center p-4 sm:p-8">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Nonogram Puzzle</h1>
-          <p className="text-gray-600">Generate a puzzle from a seed</p>
-        </div>
-
-        <button
-          onClick={handleBackToLanding}
-          className="mb-6 px-4 py-2 bg-white text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
-        >
-          ← Back to Home
-        </button>
-
-        <PuzzleGenerator onPuzzleGenerated={handlePuzzleSelected} />
-      </div>
+      <>
+        {badLink && (
+          <div className="bg-red-100 text-red-800 text-sm text-center py-2 px-4">
+            That link does not point at a valid puzzle.
+          </div>
+        )}
+        <LandingPage
+          onPuzzleSelected={handlePuzzleSelected}
+          onNavigateToPremade={() => setView('premade')}
+        />
+      </>
     );
   }
 
@@ -190,9 +211,9 @@ function App() {
               </div>
             )}
           </div>
-          {currentPuzzle && isGenerated && (
+          {currentPuzzle && (
             <div className="flex justify-center">
-              <SeedDisplay seed={currentPuzzle.id} />
+              <PuzzleCodeDisplay puzzle={currentPuzzle} />
             </div>
           )}
         </div>
@@ -211,11 +232,9 @@ function App() {
                   {currentPuzzle.width} × {currentPuzzle.height}
                 </span>
               </div>
-              {isGenerated && (
-                <div className="mt-2 flex justify-center">
-                  <SeedDisplay seed={currentPuzzle.id} />
-                </div>
-              )}
+              <div className="mt-2 flex justify-center">
+                <PuzzleCodeDisplay puzzle={currentPuzzle} />
+              </div>
             </>
           )}
           <button

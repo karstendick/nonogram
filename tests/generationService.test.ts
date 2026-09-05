@@ -43,18 +43,18 @@ beforeEach(() => {
 
 describe('generationService', () => {
   it('hands out a puzzle when nothing was pre-generated', async () => {
-    const result = await generationService.take(2);
+    const result = await generationService.take(15, 2);
     expect(result?.puzzle.title).toContain('Generated');
     expect(calls).toHaveLength(2); // The request, plus the refill behind it.
   });
 
   it('serves a speculated puzzle without generating again', async () => {
-    generationService.speculate(2);
+    generationService.speculate(15, 2);
     await Promise.resolve();
-    expect(generationService.hasReady(2)).toBe(true);
+    expect(generationService.hasReady(15, 2)).toBe(true);
 
     const before = calls.length;
-    const result = await generationService.take(2);
+    const result = await generationService.take(15, 2);
     expect(result).not.toBeNull();
     // One further call, which is the refill — not a regeneration of what was
     // already sitting ready.
@@ -62,42 +62,60 @@ describe('generationService', () => {
   });
 
   it('starts on the next puzzle as soon as one is handed out', async () => {
-    await generationService.take(3);
+    await generationService.take(15, 3);
     await Promise.resolve();
-    expect(generationService.hasReady(3)).toBe(true);
+    expect(generationService.hasReady(15, 3)).toBe(true);
   });
 
   it('does not serve a puzzle speculated for a different level', async () => {
-    generationService.speculate(1);
+    generationService.speculate(15, 1);
     await Promise.resolve();
-    expect(generationService.hasReady(1)).toBe(true);
-    expect(generationService.hasReady(4)).toBe(false);
+    expect(generationService.hasReady(15, 1)).toBe(true);
+    expect(generationService.hasReady(15, 4)).toBe(false);
 
-    const result = await generationService.take(4);
+    const result = await generationService.take(15, 4);
     expect(result).not.toBeNull();
     const lastTarget = calls[calls.length - 1].target as { rung: number };
     expect(lastTarget.rung).toBe(levelById(4).rung); // Level 4's rung, not level 1's.
   });
 
-  it('does not speculate twice for the same level', () => {
-    generationService.speculate(2);
+  it('does not serve a puzzle speculated for a different size', async () => {
+    generationService.speculate(15, 2);
+    await Promise.resolve();
+    expect(generationService.hasReady(15, 2)).toBe(true);
+    // Same difficulty, different grid: not interchangeable.
+    expect(generationService.hasReady(5, 2)).toBe(false);
+
+    const result = await generationService.take(5, 2);
+    expect(result).not.toBeNull();
+    const lastTarget = calls[calls.length - 1].target as { size: number };
+    expect(lastTarget.size).toBe(5);
+  });
+
+  it('generates at the size it was asked for', async () => {
+    await generationService.take(10, 3);
+    expect((calls[0].target as { size: number }).size).toBe(10);
+  });
+
+  it('does not speculate twice for the same size and level', () => {
+    generationService.speculate(15, 2);
     const after = calls.length;
-    generationService.speculate(2);
+    generationService.speculate(15, 2);
     expect(calls.length).toBe(after);
   });
 
   it('uses a fresh seed each time, so consecutive puzzles differ', async () => {
-    await generationService.take(2);
-    await generationService.take(2);
+    await generationService.take(15, 2);
+    await generationService.take(15, 2);
     const seeds = new Set(calls.map((c) => c.seed));
     expect(seeds.size).toBe(calls.length);
   });
 
   it('reset clears anything buffered', async () => {
-    generationService.speculate(2);
+    generationService.speculate(15, 2);
     await Promise.resolve();
     generationService.reset();
-    expect(generationService.hasReady(2)).toBe(false);
+    expect(generationService.hasReady(15, 2)).toBe(false);
   });
 });
 
@@ -140,6 +158,8 @@ describe('generationService with a worker', () => {
 
   const EVIL = 4;
   const MEDIUM = 2;
+  // These two guard behaviour that is independent of grid size; one size is enough.
+  const SIZE = 15;
 
   beforeEach(() => {
     FakeWorker.live = [];
@@ -154,16 +174,16 @@ describe('generationService with a worker', () => {
   it('does not let speculation cancel the puzzle a player is waiting for', async () => {
     // The player picks a level, which speculates on it, then presses play
     // before that speculation has finished.
-    generationService.speculate(EVIL);
-    const awaited = generationService.take(EVIL);
+    generationService.speculate(SIZE, EVIL);
+    const awaited = generationService.take(SIZE, EVIL);
 
     // Speculation for the level used last lands late, and twice: the landing
     // page schedules it on mount, StrictMode runs that effect twice, and Safari
     // has no requestIdleCallback so both land on a half-second timer — right
     // about when the player presses play.
-    generationService.speculate(MEDIUM);
+    generationService.speculate(SIZE, MEDIUM);
     await Promise.resolve();
-    generationService.speculate(MEDIUM);
+    generationService.speculate(SIZE, MEDIUM);
     await Promise.resolve();
 
     // The job the player is waiting on is still alive, so answering it hands
@@ -177,8 +197,8 @@ describe('generationService with a worker', () => {
   it('does not deal the same puzzle out twice', async () => {
     // Joining an in-flight speculation is also where that job parks its result
     // as the spare puzzle, so the one handed over has to be spent as it goes.
-    generationService.speculate(EVIL);
-    const awaited = generationService.take(EVIL);
+    generationService.speculate(SIZE, EVIL);
+    const awaited = generationService.take(SIZE, EVIL);
     const first = FakeWorker.live[0];
     first.finish('first');
     const handed = await awaited;
@@ -187,6 +207,6 @@ describe('generationService with a worker', () => {
     expect(refill).toBeDefined();
     refill?.finish('second');
     await Promise.resolve();
-    expect((await generationService.take(EVIL))?.puzzle.id).not.toBe(handed?.puzzle.id);
+    expect((await generationService.take(SIZE, EVIL))?.puzzle.id).not.toBe(handed?.puzzle.id);
   });
 });

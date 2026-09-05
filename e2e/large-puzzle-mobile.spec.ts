@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { CODES, openPuzzleByCode } from './fixtures';
 
 test.describe('Large Puzzle Mobile Tests', () => {
   test('15x15 puzzle should be scrollable and cells should be touch-friendly on mobile', async ({
@@ -7,14 +8,7 @@ test.describe('Large Puzzle Mobile Tests', () => {
   }) => {
     await page.goto('/');
 
-    // Navigate to Enter a Seed page
-    const seedButton = page.getByText('Enter a Seed').locator('..');
-    await seedButton.click();
-
-    // Generate a 15x15 puzzle
-    await page.getByLabel('Seed').fill('test-15x15');
-    await page.getByLabel('15×15').check();
-    await page.getByRole('button', { name: 'Generate Puzzle' }).click();
+    await openPuzzleByCode(page, CODES.medium15);
 
     // Wait for game board to load - wait for actual cells to appear
     const cells = page.getByRole('gridcell');

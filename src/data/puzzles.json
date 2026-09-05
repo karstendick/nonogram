@@ -1,15 +1,6 @@
 {
   "puzzles": [
     {
-      "id": "heart",
-      "title": "Heart",
-      "solution": [".##.##.", "#######", "#######", ".#####.", "..###..", "...#...", "......."],
-      "rating": {
-        "maxTechnique": 3,
-        "deductions": 20
-      }
-    },
-    {
       "id": "house",
       "title": "House",
       "solution": ["..#..", ".###.", "#####", "#...#", "#...#"],
