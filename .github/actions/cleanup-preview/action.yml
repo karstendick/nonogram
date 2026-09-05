@@ -14,7 +14,7 @@ runs:
     # runner needs it again at the end of the job to run the nested checkout's
     # post step -- which fails the job even though the cleanup itself succeeded.
     - name: Checkout gh-pages
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         ref: gh-pages
         path: gh-pages
