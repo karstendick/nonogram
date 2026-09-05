@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/nonogram/preview/seed-fixes/sw.js', { scope: '/nonogram/preview/seed-fixes/' })})}
