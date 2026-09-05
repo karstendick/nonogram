@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { generationService } from '../src/logic/generation/service';
 import * as strategies from '../src/logic/generation/strategies';
 import { emptyStats } from '../src/logic/generation/strategy';
 import { levelById } from '../src/logic/generation/levels';
 import type { Puzzle } from '../src/types';
+import type { GeneratorResponse } from '../src/workers/generator.worker';
 
 /**
  * The buffering and speculation behaviour, exercised through the main-thread
@@ -97,5 +98,95 @@ describe('generationService', () => {
     await Promise.resolve();
     generationService.reset();
     expect(generationService.hasReady(2)).toBe(false);
+  });
+});
+
+/**
+ * The same service with a worker available, which is how it runs in a browser.
+ *
+ * The fallback above settles a job before anything else can touch it, so the
+ * only place the scheduling races with itself — a job being cancelled while a
+ * player waits on it — needs a worker whose answer is held back deliberately.
+ */
+describe('generationService with a worker', () => {
+  class FakeWorker {
+    static live: FakeWorker[] = [];
+    onmessage: ((event: MessageEvent<GeneratorResponse>) => void) | null = null;
+    onerror: (() => void) | null = null;
+    terminated = false;
+
+    constructor() {
+      FakeWorker.live.push(this);
+    }
+
+    postMessage(): void {}
+
+    terminate(): void {
+      this.terminated = true;
+    }
+
+    /** Answer the way the real worker does when generation succeeds. */
+    finish(seed: string): void {
+      this.onmessage?.({
+        data: {
+          type: 'done',
+          puzzle: puzzleFor(seed),
+          rating: { maxTechnique: 6, deductions: 90 },
+          inBand: true,
+        },
+      } as MessageEvent<GeneratorResponse>);
+    }
+  }
+
+  const EVIL = 4;
+  const MEDIUM = 2;
+
+  beforeEach(() => {
+    FakeWorker.live = [];
+    (globalThis as { Worker?: unknown }).Worker = FakeWorker;
+  });
+
+  afterEach(() => {
+    delete (globalThis as { Worker?: unknown }).Worker;
+    generationService.reset();
+  });
+
+  it('does not let speculation cancel the puzzle a player is waiting for', async () => {
+    // The player picks a level, which speculates on it, then presses play
+    // before that speculation has finished.
+    generationService.speculate(EVIL);
+    const awaited = generationService.take(EVIL);
+
+    // Speculation for the level used last lands late, and twice: the landing
+    // page schedules it on mount, StrictMode runs that effect twice, and Safari
+    // has no requestIdleCallback so both land on a half-second timer — right
+    // about when the player presses play.
+    generationService.speculate(MEDIUM);
+    await Promise.resolve();
+    generationService.speculate(MEDIUM);
+    await Promise.resolve();
+
+    // The job the player is waiting on is still alive, so answering it hands
+    // them a puzzle instead of "could not find one".
+    const waitedOn = FakeWorker.live.find((worker) => !worker.terminated);
+    expect(waitedOn).toBeDefined();
+    waitedOn?.finish('joined');
+    expect(await awaited).not.toBeNull();
+  });
+
+  it('does not deal the same puzzle out twice', async () => {
+    // Joining an in-flight speculation is also where that job parks its result
+    // as the spare puzzle, so the one handed over has to be spent as it goes.
+    generationService.speculate(EVIL);
+    const awaited = generationService.take(EVIL);
+    const first = FakeWorker.live[0];
+    first.finish('first');
+    const handed = await awaited;
+
+    const refill = FakeWorker.live.find((worker) => worker !== first && !worker.terminated);
+    expect(refill).toBeDefined();
+    refill?.finish('second');
+    await Promise.resolve();
+    expect((await generationService.take(EVIL))?.puzzle.id).not.toBe(handed?.puzzle.id);
   });
 });
